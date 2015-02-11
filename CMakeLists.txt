@@ -11,8 +11,8 @@ add_definitions(${Qt5Widgets_DEFINITIONS})
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${Qt5Widgets_EXUTABLE_COMPILE_FLAGS}")
 
-set(SOURCES main.cpp mainwindow.cpp renderer.cpp)
-set(HEADERS mainwindow.h renderer.h)
+set(SOURCES main.cpp mainwindow.cpp renderer.cpp vector.cpp)
+set(HEADERS mainwindow.h renderer.h vector.h)
 
 add_executable(AJRenderer ${SOURCES} ${HEADERS})
 
