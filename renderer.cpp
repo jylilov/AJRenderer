@@ -1,10 +1,9 @@
-#include <QtGui/qvector2d.h>
+#include <iostream>
 #include "renderer.h"
 
 Renderer::Renderer(quint32 width, quint32 height)
         : width(width), height(height), image(NULL)
 {
-
 }
 
 QPixmap Renderer::render() {

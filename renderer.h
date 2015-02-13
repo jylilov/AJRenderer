@@ -1,17 +1,18 @@
-#include <QtCore/qglobal.h>
-#include <QtGui/qpixmap.h>
+#pragma once
+
+#include <QPixmap>
 #include "vector.h"
 
 class Renderer
 {
 private:
-    quint32 width;
-    quint32 height;
+    uint width;
+    uint height;
 
     QImage *image;
 
 public:
-    Renderer(quint32 width, quint32 height);
+    Renderer(uint width, uint height);
 
     QPixmap render();
 

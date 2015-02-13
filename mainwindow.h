@@ -2,8 +2,8 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
-#include <QtWidgets/qscrollarea.h>
-#include <QtWidgets/qlabel.h>
+#include <QScrollArea>
+#include <QLabel>
 #include "renderer.h"
 
 class MainWindow : public QMainWindow

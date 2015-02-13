@@ -1,3 +1,5 @@
+#pragma once
+
 #include <cassert>
 #include <cstring>
 
@@ -17,3 +19,4 @@ struct Vector {
 };
 
 typedef Vector<2, int> Vec2i;
+typedef Vector<3, double> Vec3d;
