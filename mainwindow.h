@@ -1,9 +1,7 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
-#include <QMainWindow>
-#include <QScrollArea>
-#include <QLabel>
+#include <QtWidgets>
 #include "renderer.h"
 
 class MainWindow : public QMainWindow
@@ -31,4 +29,4 @@ private slots:
 
 };
 
-#endif
+#endif //MAINWINDOW_H

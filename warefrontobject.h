@@ -3,12 +3,20 @@
 #include <QtCore>
 #include "vector.h"
 
-class WarefrontObject : QObject {
-    Q_OBJECT
+class WarefrontObject {
 public:
-    WarefrontObject(QString file_path, QObject *parent = 0);
-    QVector<Vec3d> const &getVertexList() const { return vertexList; }
+    WarefrontObject(QString file_path);
+    QVector<Vec4d> const &getVertexList() const { return vertexList; }
+    QVector<Vec3i> const &getTrianglesList() const { return trianglesList; }
+
+    uint getSize() const { return size; }
+    void setSize(uint size) { WarefrontObject::size = size; }
+    Vec4d const &getCoordinates() const { return coordinates; }
+    void setCoordinates(Vec4d &coordinates) { WarefrontObject::coordinates = coordinates; }
 
 private:
-    QVector<Vec3d> vertexList;
+    uint size;
+    Vec4d coordinates;
+    QVector<Vec4d> vertexList;
+    QVector<Vec3i> trianglesList;
 };

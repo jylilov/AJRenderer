@@ -1,7 +1,5 @@
 #include "mainwindow.h"
 
-#include <QtWidgets>
-
 MainWindow::MainWindow() {
     imageLabel = new QLabel();
 
