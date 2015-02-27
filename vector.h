@@ -8,7 +8,7 @@ class Vector {
 private:
     T items[dimCount];
 public:
-    Vector() {}
+    Vector() { for (int i = 0; i < dimCount; ++i) items[i] = T(); }
     Vector(const Vector &v) { *this = v; }
 
     T &operator[] (size_t index) {
@@ -45,6 +45,11 @@ Vector<dimCount, T> operator* (const Vector<dimCount, T> &v1, const T &value) {
         answer[i] = v1[i] * value;
     }
     return answer;
+}
+
+template <size_t dimCount, typename T>
+Vector<dimCount, T> operator/ (const Vector<dimCount, T> &v1, const T &value) {
+    return v1 * (1 / value);
 }
 
 

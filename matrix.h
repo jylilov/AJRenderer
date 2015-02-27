@@ -28,7 +28,20 @@ class Matrix {
 private:
     Vector<rowCount, T> items[colCount];
 public:
-    Matrix() {}
+    static Matrix getIdentityMatrix() {
+        assert(colCount == rowCount);
+        Matrix m;
+        for (int i = 0; i < colCount; ++i) m[i][i] = 1;
+        return m;
+    }
+
+    static Matrix getScaleMatrix(double scale) {
+        Matrix m = getIdentityMatrix();
+        for (int i = 0; i < colCount - 1; ++i) m[i][i] *= scale;
+        return m;
+    }
+
+    Matrix() { for (int i = 0; i < colCount; ++i) items[i] = Vector<rowCount, T>();}
     Matrix(const Matrix &m) { *this = m; }
 
     Matrix(T *array) {
@@ -72,7 +85,7 @@ public:
 
     Matrix getInverseMatrix() {
         Matrix adj = getAdjointMatrix();
-        return adj * (1 / getDeterminant());
+        return adj / getDeterminant();
     }
 
     Vector<rowCount, T>& operator [](size_t index) {
@@ -95,14 +108,22 @@ public:
 
 template <size_t colCount, size_t rowCount, typename T>
 Matrix<colCount, rowCount, T>operator* (
-        const Matrix<colCount, rowCount, T> &m1,
+        const Matrix<colCount, rowCount, T> &matrix,
         const T &value)
 {
     Matrix<colCount, rowCount, T> answer;
     for (int i = 0; i < colCount; ++i) {
-        answer[i] = m1[i] * value;
+        answer[i] = matrix[i] * value;
     }
     return answer;
+}
+
+template <size_t colCount, size_t rowCount, typename T>
+Matrix<colCount, rowCount, T>operator/ (
+        const Matrix<colCount, rowCount, T> &matrix,
+        const T &value)
+{
+    return matrix * (1 / value);
 }
 
 template <size_t dimCount, typename T>
@@ -115,6 +136,23 @@ Vector<dimCount, T> operator* (
         answer[i] = 0;
         for (int j = 0; j < dimCount; ++j) {
             answer[i] += vector[j] * matrix[i][j];
+        }
+    }
+    return answer;
+}
+
+
+template <size_t dimCount, typename T>
+Matrix<dimCount, dimCount, T> operator* (
+        const Matrix<dimCount, dimCount, T> &m1,
+        const Matrix<dimCount, dimCount, T> &m2)
+{
+    Matrix<dimCount, dimCount, T> answer;
+    for (int i = 0; i < dimCount; ++i) {
+        for (int j = 0; j < dimCount; ++j) {
+            for (int k = 0; k < dimCount; ++k) {
+                answer[i][j] += m1[i][k] * m2[k][j];
+            }
         }
     }
     return answer;

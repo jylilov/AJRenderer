@@ -15,6 +15,7 @@ int main(int argc, char *argv[])
     Renderer renderer(800, 800);
 
     ObjectModel *object = ObjectModel::fromWareFrontObjectFile(OBJECT);
+    object->setSize(800);
     Texture *texture = new Texture(TEXTURE);
     object->setTexture(texture);
 

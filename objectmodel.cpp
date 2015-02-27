@@ -55,3 +55,27 @@ ObjectModel *ObjectModel::fromWareFrontObjectFile(QString file_path) {
 
     return object;
 }
+
+void ObjectModel::updateMatrix() {
+    double x[] = {
+            1, 0, 0, 0,
+            0, qCos(direction[0]), -qSin(direction[0]), 0,
+            0, qSin(direction[0]), qCos(direction[0]), 0,
+            0, 0, 0, 1
+    };
+    double y[] = {
+            qCos(direction[1]), 0, qSin(direction[1]), 0,
+            0, 1, 0, 0,
+            -qSin(direction[1]), 0, qCos(direction[1]), 0,
+            0, 0, 0, 1
+    };
+    double z[] = {
+            qCos(direction[2]), -qSin(direction[2]), 0, 0,
+            qSin(direction[2]), qCos(direction[2]), 0, 0,
+            0, 0, 1, 0,
+            0, 0, 0, 1
+    };
+
+    modelMatrix = Mat4d::getScaleMatrix(size / 2) * Mat4d(x) * Mat4d(y) * Mat4d(z);
+
+}
