@@ -12,7 +12,7 @@ Vec4d Triangle::getVertex(size_t index) const {
     }
 }
 
-Vec2i Triangle::getTextureVertex(size_t index) const {
+Vec3d Triangle::getTextureVertex(size_t index) const {
     switch (index) {
         case 0:
             return getTextureVertex1();
@@ -39,7 +39,7 @@ void Triangle::setVertex(size_t index, Vec4d vertex) {
     }
 }
 
-void Triangle::setTextureVertex(size_t index, Vec2i vertex) {
+void Triangle::setTextureVertex(size_t index, Vec3d vertex) {
     switch (index) {
         case 0:
             setTextureVertex1(vertex);

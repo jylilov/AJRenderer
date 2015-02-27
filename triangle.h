@@ -3,7 +3,7 @@
 class Triangle {
 private:
     Vec4d vertex1, vertex2, vertex3;
-    Vec2i textureVertex1, textureVertex2, textureVertex3;
+    Vec3d textureVertex1, textureVertex2, textureVertex3;
 public:
     Triangle() {}
 
@@ -19,15 +19,15 @@ public:
     Vec4d getVertex(size_t index) const;
     void setVertex(size_t index, Vec4d vertex);
 
-    Vec2i getTextureVertex1() const { return textureVertex1; }
-    void setTextureVertex1(Vec2i textureVertex1) { Triangle::textureVertex1 = textureVertex1; }
+    Vec3d getTextureVertex1() const { return textureVertex1; }
+    void setTextureVertex1(Vec3d textureVertex1) { Triangle::textureVertex1 = textureVertex1; }
 
-    Vec2i getTextureVertex2() const { return textureVertex2; }
-    void setTextureVertex2(Vec2i textureVertex2) { Triangle::textureVertex2 = textureVertex2; }
+    Vec3d getTextureVertex2() const { return textureVertex2; }
+    void setTextureVertex2(Vec3d textureVertex2) { Triangle::textureVertex2 = textureVertex2; }
 
-    Vec2i getTextureVertex3() const { return textureVertex3; }
-    void setTextureVertex3(Vec2i textureVertex3) { Triangle::textureVertex3 = textureVertex3; }
+    Vec3d getTextureVertex3() const { return textureVertex3; }
+    void setTextureVertex3(Vec3d textureVertex3) { Triangle::textureVertex3 = textureVertex3; }
 
-    Vec2i getTextureVertex(size_t index) const;
-    void setTextureVertex(size_t index, Vec2i vertex);
+    Vec3d getTextureVertex(size_t index) const;
+    void setTextureVertex(size_t index, Vec3d vertex);
 };

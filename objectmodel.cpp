@@ -23,7 +23,17 @@ ObjectModel *ObjectModel::fromWareFrontObjectFile(QString file_path) {
                 vector[i] = iterator->toDouble();
             }
             vector[1] *= -1;
+            vector[3] = 1;
             object->vertexList.push_back(vector);
+        } else if (mode == "vt") {
+            Vec3d vector;
+            for (int i = 0; i < 2; ++i) {
+                ++iterator;
+
+                vector[i] = iterator->toDouble();
+            }
+            vector[1] = 1 - vector[1];
+            object->textureVertexList.push_back(vector);
         } else if (mode == "f") {
             Triangle triangle;
             for (size_t i = 0; i < 3; ++i) {
@@ -33,7 +43,9 @@ ObjectModel *ObjectModel::fromWareFrontObjectFile(QString file_path) {
                 QList<QByteArray>::iterator j = array.begin();
 
                 triangle.setVertex(i, object->vertexList.at((j++)->toInt() - 1));
-                //TODO Process other parameters
+
+                triangle.setTextureVertex(i, object->textureVertexList.at((j++)->toInt() - 1));
+                //TODO Process normal vectors
             }
             object->trianglesList.push_back(triangle);
         }

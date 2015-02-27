@@ -85,24 +85,26 @@ bool Renderer::isOnScreen(int x, int y) {
 
 void Renderer::renderObject(ObjectModel *object) {
     QVector<Triangle> triangles = object->getTrianglesList();
-    QVector<Vec4d> vertices = object->getVertexList();
 
     for (QVector<Triangle>::iterator i = triangles.begin(); i != triangles.end(); ++i) {
-        Vec4d v1, v2, v3;
         Triangle t = *i;
 
-        for (size_t i = 0; i < 3; ++i) {
-            t.setVertex(i, transform(t.getVertex(i)));
+        for (size_t j = 0; j < 3; ++j) {
+            t.setVertex(j, transform(t.getVertex(j)));
         }
 
-        renderTriangle(t);
+        renderTriangle(t, object->getTexture());
     }
 }
 
-void Renderer::renderTriangle(Triangle &t) {
+void Renderer::renderTriangle(Triangle &t, Texture *texture) {
     Vec4d v1 = t.getVertex1();
     Vec4d v2 = t.getVertex2();
     Vec4d v3 = t.getVertex3();
+
+    Vec3d vt1 = t.getTextureVertex1();
+    Vec3d vt2 = t.getTextureVertex2();
+    Vec3d vt3 = t.getTextureVertex3();
 
     double z = (v1[2] + v2[2] + v3[2]) / 3;
 
@@ -117,13 +119,22 @@ void Renderer::renderTriangle(Triangle &t) {
             1, 1, 1
     };
 
+    double textureMatrixArray[] = {
+            vt1[0], vt2[0], vt3[0],
+            vt1[1], vt2[1], vt3[1],
+            1, 1, 1
+    };
+
     Mat3d matrix(matrixArray);
     matrix = matrix.getInverseMatrix();
+
+    Mat3d textureMatrix(textureMatrixArray);
 
     Vec3d barycentric;
     Vec3d curVertex;
 
     curVertex[2] = 1;
+    uint color = qRgb((z + 1) * 128, (z + 1) * 128, (z + 1) * 128);
 
     for (int i = minX; i <= maxX; ++i) {
         for (int j = minY; j < maxY; ++j) {
@@ -134,7 +145,12 @@ void Renderer::renderTriangle(Triangle &t) {
                 continue;
             else {
                 if (z > zBuffer[i * width + j]) {
-                    putPixel(i, j, qRgb((z + 1) * 128, (z + 1) * 128, (z + 1) * 128));
+                    if (texture) {
+                        Vec3d textureCoordinats = textureMatrix * barycentric;
+                        color = texture->getColor(textureCoordinats[0], textureCoordinats[1]);
+                    }
+                    putPixel(i, j, color);
+
                     zBuffer[i * width + j] = z;
                 }
             }
