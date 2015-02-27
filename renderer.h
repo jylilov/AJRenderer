@@ -24,11 +24,7 @@ public:
     void removeObject(ObjectModel *object) { objects.removeOne(object); }
 
 private:
-    void renderLine(int x0, int y0, int x1, int y1, uint color);
-    void renderLine(Vec2i p0, Vec2i p1, uint color);
-
-    void renderLine(Vec4d p0, Vec4d p1, uint color);
-    void renderTriangle(Triangle &t, Texture *texture = 0);
+    void renderTriangle(Triangle &t, Texture *text);
 
     void renderObject(ObjectModel *object);
 

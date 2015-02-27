@@ -20,65 +20,6 @@ QPixmap Renderer::render() {
     return QPixmap::fromImage(image);
 }
 
-//TODO remove renderLine methods
-void Renderer::renderLine(Vec2i p0, Vec2i p1, uint color) {
-    renderLine(p0[0], p0[1], p1[0],p1[1], color);
-}
-
-void Renderer::renderLine(Vec4d p0, Vec4d p1, uint color) {
-    /*Vec2i pi0 = transorm(p0);
-    Vec2i pi1 = transorm(p1);
-
-    if (isOnScreen(pi0) || isOnScreen(pi1)) {
-        renderLine(pi0, pi1, color);
-    }*/
-}
-
-void Renderer::renderLine(int x0, int y0, int x1, int y1, uint color) {
-    bool swapped = false;
-    if (qAbs(x0 - x1) < qAbs(y0 - y1)) {
-        qSwap(x0, y0);
-        qSwap(x1, y1);
-        swapped = true;
-    }
-
-    if (x0 > x1) {
-        qSwap(x0, x1);
-        qSwap(y0, y1);
-    }
-
-    int dx = x1 - x0;
-    int dy = y1 - y0;
-
-    int de = qAbs(dy) * 2;
-    int e = 0;
-
-    int incY = (y1 > y0 ? 1 : -1);
-
-    for (int x = x0, y = y0; x <= x1; x++) {
-        if (swapped) {
-            putPixel(y, x, color);
-        } else {
-            putPixel(x, y, color);
-        }
-        e += de;
-
-        if (e > dx) {
-            y += incY;
-            e -= 2 * dx;
-        }
-    }
-}
-
-Vec4d Renderer::transform(Vec4d v) {
-    Vec4d newV = v;
-    newV[0] = qRound((v[0] + 1) * width / 2);
-    newV[1] = qRound((v[1] + 1) * height / 2);
-    return newV;
-}
-
-
-//TODO remove if not needed
 bool Renderer::isOnScreen(int x, int y) {
     return x >= 0 && x < width && y >= 0 && y < height;
 }
@@ -87,26 +28,42 @@ void Renderer::renderObject(ObjectModel *object) {
     QVector<Triangle> triangles = object->getTrianglesList();
 
     for (QVector<Triangle>::iterator i = triangles.begin(); i != triangles.end(); ++i) {
-        Triangle t = *i;
-
-        for (size_t j = 0; j < 3; ++j) {
-            t.setVertex(j, transform(t.getVertex(j)));
-        }
-
-        renderTriangle(t, object->getTexture());
+        renderTriangle(*i, object->getTexture());
     }
 }
 
 void Renderer::renderTriangle(Triangle &t, Texture *texture) {
+
     Vec4d v1 = t.getVertex1();
     Vec4d v2 = t.getVertex2();
     Vec4d v3 = t.getVertex3();
 
-    Vec3d vt1 = t.getTextureVertex1();
-    Vec3d vt2 = t.getTextureVertex2();
-    Vec3d vt3 = t.getTextureVertex3();
-
     double z = (v1[2] + v2[2] + v3[2]) / 3;
+
+    double perspectiveArray[] = {
+            width / 2 * 3 / 4, 0, 0, width / 8 + width / 2 * 3 / 4,
+            0, height / 2 * 3 / 4, 0, height / 8 + height / 2 * 3 / 4,
+            0, 0, 1, 0,
+            0, 0, 0, 1,
+    };
+
+    double projArray[] = {
+            qCos(-0.5), 0, -qSin(-0.5), 0,
+            0, 1, 0, 0,
+            qSin(-0.5), 0, qCos(-0.5), 0,
+            0, 0, -0.33, 1
+    };
+
+    Mat4d perspectiveMatrix(perspectiveArray);
+    Mat4d projMatrix(projArray);
+
+    v1 = perspectiveMatrix * (projMatrix * v1);
+    v2 = perspectiveMatrix * (projMatrix * v2);
+    v3 = perspectiveMatrix * (projMatrix * v3);
+
+    v1 = v1 * (1 / v1[3]);
+    v2 = v2 * (1 / v2[3]);
+    v3 = v3 * (1 / v3[3]);
 
     int minX = qRound(qMin(v1[0], qMin(v2[0], v3[0])));
     int maxX = qRound(qMax(v1[0], qMax(v2[0], v3[0])));
@@ -114,10 +71,14 @@ void Renderer::renderTriangle(Triangle &t, Texture *texture) {
     int maxY = qRound(qMax(v1[1], qMax(v2[1], v3[1])));
 
     double matrixArray[] = {
-            v1[0], v2[0], v3[0],
-            v1[1], v2[1], v3[1],
+            qRound(v1[0]), qRound(v2[0]), qRound(v3[0]),
+            qRound(v1[1]), qRound(v2[1]), qRound(v3[1]),
             1, 1, 1
     };
+
+    Vec3d vt1 = t.getTextureVertex1();
+    Vec3d vt2 = t.getTextureVertex2();
+    Vec3d vt3 = t.getTextureVertex3();
 
     double textureMatrixArray[] = {
             vt1[0], vt2[0], vt3[0],
@@ -133,21 +94,20 @@ void Renderer::renderTriangle(Triangle &t, Texture *texture) {
     Vec3d barycentric;
     Vec3d curVertex;
 
-    curVertex[2] = 1;
+    //curVertex[2] = 1;
     uint color = qRgb((z + 1) * 128, (z + 1) * 128, (z + 1) * 128);
 
     for (int i = minX; i <= maxX; ++i) {
         for (int j = minY; j < maxY; ++j) {
             curVertex[0] = i;
             curVertex[1] = j;
+            curVertex[2] = 1;
             barycentric = matrix * curVertex;
-            if (barycentric[0] < -1e-10 || barycentric[1] < -1e-10 || barycentric[2] < -1e-10)
-                continue;
-            else {
+            if (barycentric[0] > -1e-10 && barycentric[1] > -1e-10 & barycentric[2] > -1e-10) {
                 if (z > zBuffer[i * width + j]) {
                     if (texture) {
-                        Vec3d textureCoordinats = textureMatrix * barycentric;
-                        color = texture->getColor(textureCoordinats[0], textureCoordinats[1]);
+                        Vec3d textureCoordinates = textureMatrix * barycentric;
+                        color = texture->getColor(textureCoordinates[0], textureCoordinates[1]);
                     }
                     putPixel(i, j, color);
 
