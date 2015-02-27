@@ -1,37 +1,37 @@
-#include <iostream>
-#include "warefrontobject.h"
 #include "renderer.h"
 
+#include "matrix.h"
+
 Renderer::Renderer(quint32 width, quint32 height)
-        : width(width), height(height), image(NULL)
+        : width(width), height(height), image(width, height, QImage::Format_RGB888)
 {
+    zBuffer = new double[width * height];
 }
 
 QPixmap Renderer::render() {
-    if (!image) {
-        image = new QImage(width, height, QImage::Format_RGB888);
-        image->fill(qRgb(0, 0, 0));
-    }
+    image.fill(qRgb(0, 0, 0));
+    for (int i = 0; i < width * height; ++i)
+        zBuffer[i] = -std::numeric_limits<double>::max();
 
-    for (QList<WarefrontObject *>::iterator i = objects.begin(); i != objects.end(); ++i) {
+    for (QList<ObjectModel *>::iterator i = objects.begin(); i != objects.end(); ++i) {
         renderObject(*i);
     }
 
-    return QPixmap::fromImage(*image);
+    return QPixmap::fromImage(image);
 }
 
+//TODO remove renderLine methods
 void Renderer::renderLine(Vec2i p0, Vec2i p1, uint color) {
     renderLine(p0[0], p0[1], p1[0],p1[1], color);
 }
 
 void Renderer::renderLine(Vec4d p0, Vec4d p1, uint color) {
-    Vec2i pi0;
-    pi0[0] = qRound((p0[0] + 1) * 299.5);
-    pi0[1] = qRound((p0[1] + 1) * 299.5);
-    Vec2i pi1;
-    pi1[0] = qRound((p1[0] + 1) * 299.5);
-    pi1[1] = qRound((p1[1] + 1) * 299.5);
-    renderLine(pi0, pi1, color);
+    /*Vec2i pi0 = transorm(p0);
+    Vec2i pi1 = transorm(p1);
+
+    if (isOnScreen(pi0) || isOnScreen(pi1)) {
+        renderLine(pi0, pi1, color);
+    }*/
 }
 
 void Renderer::renderLine(int x0, int y0, int x1, int y1, uint color) {
@@ -57,9 +57,9 @@ void Renderer::renderLine(int x0, int y0, int x1, int y1, uint color) {
 
     for (int x = x0, y = y0; x <= x1; x++) {
         if (swapped) {
-            image->setPixel(y, x, color);
+            putPixel(y, x, color);
         } else {
-            image->setPixel(x, y, color);
+            putPixel(x, y, color);
         }
         e += de;
 
@@ -70,23 +70,79 @@ void Renderer::renderLine(int x0, int y0, int x1, int y1, uint color) {
     }
 }
 
-void Renderer::renderObject(WarefrontObject *object) {
-    QVector<Vec3i> triangles = object->getTrianglesList();
+Vec4d Renderer::transform(Vec4d v) {
+    Vec4d newV = v;
+    newV[0] = qRound((v[0] + 1) * width / 2);
+    newV[1] = qRound((v[1] + 1) * height / 2);
+    return newV;
+}
+
+
+//TODO remove if not needed
+bool Renderer::isOnScreen(int x, int y) {
+    return x >= 0 && x < width && y >= 0 && y < height;
+}
+
+void Renderer::renderObject(ObjectModel *object) {
+    QVector<Triangle> triangles = object->getTrianglesList();
     QVector<Vec4d> vertices = object->getVertexList();
 
-    for (QVector<Vec3i>::iterator i = triangles.begin(); i != triangles.end(); ++i) {
+    for (QVector<Triangle>::iterator i = triangles.begin(); i != triangles.end(); ++i) {
         Vec4d v1, v2, v3;
+        Triangle t = *i;
 
-        v1 = vertices.at((*i)[0]);
-        v2 = vertices.at((*i)[1]);
-        v3 = vertices.at((*i)[2]);
+        for (size_t i = 0; i < 3; ++i) {
+            t.setVertex(i, transform(t.getVertex(i)));
+        }
 
-        renderTriangle(v1, v2, v3);
+        renderTriangle(t);
     }
 }
 
-void Renderer::renderTriangle(Vec4d &v1, Vec4d &v2, Vec4d &v3) {
-    renderLine(v1, v2, qRgb(255, 255, 255));
-    renderLine(v1, v3, qRgb(255, 255, 255));
-    renderLine(v3, v2, qRgb(255, 255, 255));
+void Renderer::renderTriangle(Triangle &t) {
+    Vec4d v1 = t.getVertex1();
+    Vec4d v2 = t.getVertex2();
+    Vec4d v3 = t.getVertex3();
+
+    double z = (v1[2] + v2[2] + v3[2]) / 3;
+
+    int minX = qRound(qMin(v1[0], qMin(v2[0], v3[0])));
+    int maxX = qRound(qMax(v1[0], qMax(v2[0], v3[0])));
+    int minY = qRound(qMin(v1[1], qMin(v2[1], v3[1])));
+    int maxY = qRound(qMax(v1[1], qMax(v2[1], v3[1])));
+
+    double matrixArray[] = {
+            v1[0], v2[0], v3[0],
+            v1[1], v2[1], v3[1],
+            1, 1, 1
+    };
+
+    Mat3d matrix(matrixArray);
+    matrix = matrix.getInverseMatrix();
+
+    Vec3d barycentric;
+    Vec3d curVertex;
+
+    curVertex[2] = 1;
+
+    for (int i = minX; i <= maxX; ++i) {
+        for (int j = minY; j < maxY; ++j) {
+            curVertex[0] = i;
+            curVertex[1] = j;
+            barycentric = matrix * curVertex;
+            if (barycentric[0] < -1e-10 || barycentric[1] < -1e-10 || barycentric[2] < -1e-10)
+                continue;
+            else {
+                if (z > zBuffer[i * width + j]) {
+                    putPixel(i, j, qRgb((z + 1) * 128, (z + 1) * 128, (z + 1) * 128));
+                    zBuffer[i * width + j] = z;
+                }
+            }
+        }
+    }
+}
+
+void Renderer::putPixel(int x, int y, uint color) {
+    if (isOnScreen(x, y))
+        image.setPixel(x, y, color);
 }

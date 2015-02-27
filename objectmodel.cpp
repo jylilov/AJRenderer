@@ -1,15 +1,17 @@
-#include "warefrontobject.h"
+#include "objectmodel.h"
 
-WarefrontObject::WarefrontObject(QString file_path)
-        : coordinates(), size(0)
-{
+ObjectModel *ObjectModel::fromWareFrontObjectFile(QString file_path) {
+    ObjectModel *object = new ObjectModel();
     QFile file(file_path);
 
     if (!file.open(QIODevice::ReadOnly))
-        return;
+        return 0;
 
     while (!file.atEnd()) {
         QByteArray line = file.readLine();
+
+        line.remove(line.size() - 1, 1); // remove "/n"
+
         QList<QByteArray> words = line.split(' ');
         QList<QByteArray>::iterator iterator = words.begin();
         QString mode(*iterator);
@@ -21,18 +23,23 @@ WarefrontObject::WarefrontObject(QString file_path)
                 vector[i] = iterator->toDouble();
             }
             vector[1] *= -1;
-            vertexList.push_back(vector);
+            object->vertexList.push_back(vector);
         } else if (mode == "f") {
-            Vec3i vector;
-            for (int i = 0; i < 3; ++i) {
+            Triangle triangle;
+            for (size_t i = 0; i < 3; ++i) {
                 ++iterator;
-                //TODO Process other parameters
                 QList<QByteArray> array = iterator->split('/');
-                vector[i] = array.begin()->toInt() - 1;
+
+                QList<QByteArray>::iterator j = array.begin();
+
+                triangle.setVertex(i, object->vertexList.at((j++)->toInt() - 1));
+                //TODO Process other parameters
             }
-            trianglesList.push_back(vector);
+            object->trianglesList.push_back(triangle);
         }
     }
 
     file.close();
+
+    return object;
 }

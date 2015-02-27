@@ -29,10 +29,6 @@ public:
     }
 };
 
-typedef Vector<2, int> Vec2i;
-typedef Vector<4, double> Vec4d;
-typedef Vector<3, int> Vec3i;
-
 template <size_t dimCount, typename T>
 Vector<dimCount, T> operator+ (const Vector<dimCount, T> &v1, const Vector<dimCount, T> &v2) {
     Vector<dimCount, T> answer;
@@ -49,3 +45,11 @@ Vector<dimCount, T> operator* (const Vector<dimCount, T> &v1, const double &valu
     }
     return answer;
 }
+
+
+typedef Vector<3, int> Vec3i;
+typedef Vector<2, int> Vec2i;
+typedef Vector<4, double> Vec4d;
+typedef Vector<3, double> Vec3d;
+typedef Vector<2, double> Vec2d;
+

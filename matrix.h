@@ -105,4 +105,20 @@ Matrix<colCount, rowCount, T>operator* (
     return answer;
 }
 
+template <size_t dimCount, typename T>
+Vector<dimCount, T> operator* (
+        const Matrix<dimCount, dimCount, T> &matrix,
+        const Vector<dimCount, T> &vector)
+{
+    Vector<dimCount, T> answer;
+    for (int i = 0; i < dimCount; ++i) {
+        answer[i] = 0;
+        for (int j = 0; j < dimCount; ++j) {
+            answer[i] += vector[j] * matrix[i][j];
+        }
+    }
+    return answer;
+}
+
 typedef Matrix<4, 4, double> Mat4d;
+typedef Matrix<3, 3, double> Mat3d;

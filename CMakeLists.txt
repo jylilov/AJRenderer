@@ -16,15 +16,17 @@ set(SOURCES
     mainwindow.cpp
     renderer.cpp
     vector.cpp
-    warefrontobject.cpp
-    matrix.cpp)
+    objectmodel.cpp
+    matrix.cpp
+    triangle.cpp)
 
 set(HEADERS
     mainwindow.h
     renderer.h
     vector.h
-    warefrontobject.h
-    matrix.h)
+    objectmodel.h
+    matrix.h
+    triangle.h)
 
 add_executable(AJRenderer ${SOURCES} ${HEADERS})
 

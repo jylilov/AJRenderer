@@ -7,12 +7,16 @@ int main(int argc, char *argv[])
 
     MainWindow win;
     Renderer renderer(600, 600);
-    WarefrontObject object("/home/jylilov/TEMP/african_head.obj");
-    renderer.addObject(&object);
+    ObjectModel *object = ObjectModel::fromWareFrontObjectFile("/home/jylilov/TEMP/diablo3.obj");
+    renderer.addObject(object);
 
     win.setRenderer(&renderer);
 
     win.showMaximized();
 
-    return app.exec();
+    int result = app.exec();
+
+    delete object;
+
+    return result;
 }
