@@ -2,9 +2,9 @@
 
 #include <QtCore>
 #include "vector.h"
-#include "triangle.h"
 #include "texture.h"
 #include "matrix.h"
+#include "vertex.h"
 
 class ObjectModel {
 private:
@@ -12,8 +12,6 @@ private:
     void updateMatrix();
 public:
     static ObjectModel *fromWareFrontObjectFile(QString file_path);
-
-    QVector<Triangle> const &getTrianglesList() const { return trianglesList; }
 
     void setTexture(Texture *texture = 0) { this->texture = texture; }
     Texture *getTexture() { return texture; }
@@ -24,14 +22,18 @@ public:
     void setDirection(Vec3d direction) { ObjectModel::direction = direction; updateMatrix(); }
     Mat4d getModelMatrix() const { return modelMatrix; }
 
+
+    QVector<Vector<3, Vertex> > const &getTriangles() const { return triangles; }
+
 private:
     double size;
     Vec3d direction;
     Mat4d modelMatrix;
 
-    QVector<Vec4d> vertexList;
-    QVector<Triangle> trianglesList;
-    QVector<Vec3d> textureVertexList;
+    QVector<Vec3d> vertexList;
+    QVector<Vec2d> textureVertexList;
+    QVector<Vec3d> normalVectors;
+    QVector<Vector<3, Vertex> > triangles;
 
     Texture *texture;
 };

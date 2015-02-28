@@ -1,9 +1,9 @@
 #pragma once
 
-#include <cstring>
+#include <QtCore>
 #include "vector.h"
 
-template <size_t colCount, size_t rowCount, typename T>
+template <uint rowCount, uint colCount, typename T>
 class Matrix;
 
 class Determinant {
@@ -13,60 +13,66 @@ public:
         return matrix[0][0];
     }
 
-    template <size_t dimCount, typename T>
+    template <uint dimCount, typename T>
     static T countDeterminant(const Matrix<dimCount, dimCount, T> &matrix) {
         T answer = T();
-        for (size_t i = 0; i < dimCount; ++i) {
+        for (uint i = 0; i < dimCount; ++i) {
             answer += matrix.getAlgebraicComplement(i, 0) * matrix[i][0];
         }
         return answer;
     }
 };
 
-template <size_t colCount, size_t rowCount, typename T>
+template <uint rowCount, uint colCount, typename T>
 class Matrix {
-private:
-    Vector<rowCount, T> items[colCount];
 public:
     static Matrix getIdentityMatrix() {
-        assert(colCount == rowCount);
+        Q_ASSERT(rowCount == colCount);
         Matrix m;
-        for (int i = 0; i < colCount; ++i) m[i][i] = 1;
+        for (uint i = 0; i < rowCount; ++i) m[i][i] = 1;
         return m;
     }
-
+//TODO more beautiful
     static Matrix getScaleMatrix(double scale) {
         Matrix m = getIdentityMatrix();
-        for (int i = 0; i < colCount - 1; ++i) m[i][i] *= scale;
+        for (uint i = 0; i < rowCount - 1; ++i) m[i][i] *= scale;
         return m;
     }
+private:
+    Vector<colCount, T> items[rowCount];
+public:
+    Matrix() {}
 
-    Matrix() { for (int i = 0; i < colCount; ++i) items[i] = Vector<rowCount, T>();}
     Matrix(const Matrix &m) { *this = m; }
 
-    Matrix(T *array) {
-        size_t k = 0;
-        for (size_t i = 0; i < colCount; ++i)
-            for (size_t j = 0; j < rowCount; ++j)
-                items[i][j] = array[k++];
-    }
+    Matrix(T first, ...) {
+        items[0][0] = first;
 
-    Matrix<colCount - 1, rowCount - 1, T> getMinor(size_t x, size_t y) const {
-        assert(x <= colCount && y <= rowCount);
-        T array[colCount * rowCount];
-        size_t k = 0;
-        for (size_t i = 0; i < colCount; ++i) {
-            for (size_t j = 0; j < rowCount; ++j) {
-                if (i != x && j != y)
-                    array[k++] = items[i][j];
+        va_list list;
+        va_start(list, first);
+
+        for (uint i = 0; i < rowCount; ++i) {
+            for (uint j = (i != 0) ? 0 : 1; j < colCount; ++j) {
+                items[i][j] = va_arg(list, T);
             }
         }
-        return Matrix <colCount - 1, rowCount - 1, T>(array);
+        va_end(list);
     }
 
-    T getAlgebraicComplement(size_t x, size_t y) const {
-        assert(rowCount == colCount);
-        assert(x <= colCount && y <= rowCount);
+    Matrix<rowCount - 1, colCount - 1, T> getMinor(uint x, uint y) const {
+        Q_ASSERT(x <= rowCount && y <= colCount);
+        Matrix<rowCount - 1, colCount - 1, T> answer;
+        for (uint i = 0; i < rowCount - 1; ++i) {
+            for (uint j = 0; j < colCount - 1; ++j) {
+                answer[i][j] = items[i < x ? i : i + 1][j < y ? j : j + 1];
+            }
+        }
+        return answer;
+    }
+
+    T getAlgebraicComplement(uint x, uint y) const {
+        Q_ASSERT(colCount == rowCount);
+        Q_ASSERT(x <= rowCount && y <= colCount);
         return ((x + y) % 2 ? -1 : 1) * getMinor(x, y).getDeterminant();
     }
 
@@ -74,67 +80,73 @@ public:
         return Determinant::countDeterminant(*this);
     }
 
-    Matrix getAdjointMatrix() {
-        T array[colCount * rowCount];
-        size_t k = 0;
-        for (size_t i = 0; i < rowCount; ++i)
-            for (size_t j = 0; j < colCount; ++j)
-                array[k++] = getAlgebraicComplement(j, i);
-        return Matrix<colCount, rowCount, T>(array);
+    Matrix<colCount, rowCount, T> getAdjointMatrix() {
+        Matrix<colCount, rowCount, T> answer;
+        for (uint i = 0; i < colCount; ++i)
+            for (uint j = 0; j < rowCount; ++j)
+                answer[i][j] = getAlgebraicComplement(j, i);
+        return answer;
     }
 
     Matrix getInverseMatrix() {
-        Matrix adj = getAdjointMatrix();
-        return adj / getDeterminant();
+        return getAdjointMatrix() / getDeterminant();
     }
 
-    Vector<rowCount, T>& operator [](size_t index) {
-        assert(index < rowCount);
+    Matrix &operator *= (const T &value) {
+        for (uint i = 0; i < rowCount; ++i) {
+            items[i] *= value;
+        }
+        return *this;
+    }
+
+    Matrix &operator /= (const T &value) {
+        return *this *= (1 / value);
+    }
+
+    Vector<colCount, T> &operator [] (uint index) {
+        Q_ASSERT(index < colCount);
         return items[index];
     }
 
-    const Vector<rowCount, T>& operator [](size_t index) const {
-        assert(index < rowCount);
+    const Vector<colCount, T> &operator [] (uint index) const {
+        Q_ASSERT(index < colCount);
         return items[index];
     }
 
-    Matrix &operator= (const Matrix &m) {
-        for (int i = 0; i < rowCount; ++i) {
+    Matrix &operator = (const Matrix &m) {
+        for (uint i = 0; i < colCount; ++i) {
             this->items[i] = m.items[i];
         }
         return *this;
     }
 };
 
-template <size_t colCount, size_t rowCount, typename T>
-Matrix<colCount, rowCount, T>operator* (
-        const Matrix<colCount, rowCount, T> &matrix,
+template <uint rowCount, uint colCount, typename T>
+Matrix<rowCount, colCount, T> operator * (
+        const Matrix<rowCount, colCount, T> &matrix,
         const T &value)
 {
-    Matrix<colCount, rowCount, T> answer;
-    for (int i = 0; i < colCount; ++i) {
-        answer[i] = matrix[i] * value;
-    }
-    return answer;
+    Matrix<rowCount, colCount, T> answer = matrix;
+    return answer *= value;
 }
 
-template <size_t colCount, size_t rowCount, typename T>
-Matrix<colCount, rowCount, T>operator/ (
-        const Matrix<colCount, rowCount, T> &matrix,
+template <uint rowCount, uint colCount, typename T>
+Matrix<rowCount, colCount, T> operator / (
+        const Matrix<rowCount, colCount, T> &matrix,
         const T &value)
 {
     return matrix * (1 / value);
 }
 
-template <size_t dimCount, typename T>
-Vector<dimCount, T> operator* (
-        const Matrix<dimCount, dimCount, T> &matrix,
-        const Vector<dimCount, T> &vector)
+template <uint colCount, uint rowCount, typename T>
+Vector<rowCount, T> operator* (
+        const Matrix<rowCount, colCount, T> &matrix,
+        const Vector<colCount, T> &vector)
 {
-    Vector<dimCount, T> answer;
-    for (int i = 0; i < dimCount; ++i) {
+    Vector<rowCount, T> answer;
+    for (int i = 0; i < rowCount; ++i) {
         answer[i] = 0;
-        for (int j = 0; j < dimCount; ++j) {
+        for (int j = 0; j < colCount; ++j) {
             answer[i] += vector[j] * matrix[i][j];
         }
     }
@@ -142,15 +154,15 @@ Vector<dimCount, T> operator* (
 }
 
 
-template <size_t dimCount, typename T>
-Matrix<dimCount, dimCount, T> operator* (
-        const Matrix<dimCount, dimCount, T> &m1,
-        const Matrix<dimCount, dimCount, T> &m2)
+template <uint dim1, uint dim2, uint dim3, typename T>
+Matrix<dim1, dim3, T> operator* (
+        const Matrix<dim1, dim2, T> &m1,
+        const Matrix<dim2, dim3, T> &m2)
 {
-    Matrix<dimCount, dimCount, T> answer;
-    for (int i = 0; i < dimCount; ++i) {
-        for (int j = 0; j < dimCount; ++j) {
-            for (int k = 0; k < dimCount; ++k) {
+    Matrix<dim1, dim3, T> answer;
+    for (int i = 0; i < dim1; ++i) {
+        for (int j = 0; j < dim3; ++j) {
+            for (int k = 0; k < dim2; ++k) {
                 answer[i][j] += m1[i][k] * m2[k][j];
             }
         }

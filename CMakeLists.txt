@@ -15,11 +15,9 @@ set(SOURCES
     main.cpp
     mainwindow.cpp
     renderer.cpp
-    vector.cpp
     objectmodel.cpp
-    matrix.cpp
-    triangle.cpp
-    texture.cpp)
+    texture.cpp
+    vertex.cpp)
 
 set(HEADERS
     mainwindow.h
@@ -27,8 +25,8 @@ set(HEADERS
     vector.h
     objectmodel.h
     matrix.h
-    triangle.h
-    texture.h)
+    texture.h
+    vertex.h)
 
 add_executable(AJRenderer ${SOURCES} ${HEADERS})
 

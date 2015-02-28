@@ -16,8 +16,6 @@ QPixmap Renderer::render() {
         renderObject(*i);
     }
 
-    time += 0.1;
-
     return QPixmap::fromImage(image);
 }
 
@@ -26,55 +24,52 @@ bool Renderer::isOnScreen(int x, int y) {
 }
 
 void Renderer::renderObject(ObjectModel *object) {
-    QVector<Triangle> triangles = object->getTrianglesList();
+    QVector<Vector<3, Vertex> > triangles = object->getTriangles();
+
+    Vec3d lightVector( 1.0, 0.0, 0.0 );
+    lightVector.normalize();
 
     objectMatrix = object->getModelMatrix();
+    texture = object->getTexture();
 
-    for (QVector<Triangle>::iterator i = triangles.begin(); i != triangles.end(); ++i) {
-        renderTriangle(*i, object->getTexture());
+    for (QVector<Vector<3, Vertex> >::iterator i = triangles.begin(); i != triangles.end(); ++i) {
+        Vec3i v[3];
+
+        for (size_t j = 0; j < 3; ++j) {
+            Vertex vertex = (*i)[j];
+            textureCoordinates[0][j] = vertex.getTextureCoordinates()[0];
+            textureCoordinates[1][j] = vertex.getTextureCoordinates()[1];
+            intensity[j] = vertex.getNormalVector() * lightVector;
+            v[j] = vertexShader(vertex);
+        }
+
+        renderTriangle(v);
     }
+
 }
 
-void Renderer::renderTriangle(Triangle &t, Texture *texture) {
+void Renderer::renderTriangle(Vec3i t[3], Texture *texture) {
+    int minX = std::numeric_limits<int>::max();
+    int maxX = -std::numeric_limits<int>::max();
+    int minY = std::numeric_limits<int>::max();
+    int maxY = -std::numeric_limits<int>::max();
 
-    Vec4d v1 = sceneMatrix * objectMatrix * t.getVertex1();
-    Vec4d v2 = sceneMatrix * objectMatrix * t.getVertex2();
-    Vec4d v3 = sceneMatrix * objectMatrix * t.getVertex3();
+    for (int i = 0; i < 3; ++i) {
+        minX = qMin(minX, t[i][0]);
+        maxX = qMax(maxX, t[i][0]);
+        minY = qMin(minY, t[i][1]);
+        maxY = qMax(maxY, t[i][1]);
+    }
 
-    v1 = v1 / v1[3];
-    v2 = v2 / v2[3];
-    v3 = v3 / v3[3];
-
-    int minX = qMax(qRound(qMin(v1[0], qMin(v2[0], v3[0]))), 0);
-    int maxX = qMin(qRound(qMax(v1[0], qMax(v2[0], v3[0]))), (int)width);
-    int minY = qMax(qRound(qMin(v1[1], qMin(v2[1], v3[1]))), 0);
-    int maxY = qMin(qRound(qMax(v1[1], qMax(v2[1], v3[1]))), (int)height);
-
-    double matrixArray[] = {
-            qRound(v1[0]), qRound(v2[0]), qRound(v3[0]),
-            qRound(v1[1]), qRound(v2[1]), qRound(v3[1]),
-            1, 1, 1
-    };
-
-    Mat3d matrix(matrixArray);
-    matrix = matrix.getInverseMatrix();
-
-    Vec3d vt1 = t.getTextureVertex1();
-    Vec3d vt2 = t.getTextureVertex2();
-    Vec3d vt3 = t.getTextureVertex3();
-
-    double textureMatrixArray[] = {
-            vt1[0], vt2[0], vt3[0],
-            vt1[1], vt2[1], vt3[1],
-            1, 1, 1
-    };
-
-    Mat3d textureMatrix(textureMatrixArray);
+    minX = qMax(minX, 0);
+    maxX = qMin(maxX, int(width));
+    minY = qMax(minY, 0);
+    maxY = qMin(maxY, int(height));
 
     Vec3d barycentric;
-    Vec3d curVertex;
+    Vec3i curVertex;
 
-    double z = (v1[2] + v2[2] + v3[2]) / 3; //TODO right zBuffer calculation
+    double z = (t[1][2] + t[2][2] + t[3][2]) / 3; //TODO right zBuffer calculation
 
     for (int i = minX; i <= maxX; ++i) {
         for (int j = minY; j < maxY; ++j) {
@@ -82,13 +77,15 @@ void Renderer::renderTriangle(Triangle &t, Texture *texture) {
             curVertex[1] = j;
             curVertex[2] = 1;
 
-            barycentric = matrix * curVertex;
+            barycentric = getBarycentricCoordinate(t, curVertex);
+
             if (barycentric[0] > -1e-10 && barycentric[1] > -1e-10 & barycentric[2] > -1e-10) {
                 if (z > zBuffer[i * width + j]) {
-                    Vec3d textureCoordinates = textureMatrix * barycentric;
-                    putPixel(i, j, texture->getColor(textureCoordinates[0], textureCoordinates[1]));
-
-                    zBuffer[i * width + j] = z;
+                    uint color;
+                    if (!fragmentShader(barycentric, color)) {
+                        zBuffer[i * width + j] = z;
+                        putPixel(i, j, color);
+                    }
                 }
             }
         }
@@ -106,12 +103,47 @@ void Renderer::updateMatrix() {
     sceneMatrix[1][3] = height / 2;
 
 
-    double array[] = {
-            1, 0, 0, 0,
-            0, 1, 0, 0,
-            0, 0, 1, 0,
-            0,  0, -0.001, 1
-    };
+    Mat4d perspective(
+            1.0, 0.0, 0.0, 0.0,
+            0.0, 1.0, 0.0, 0.0,
+            0.0, 0.0, 1.0, 0.0,
+            0.0, 0.0, -0.001, 1.0
+    );
 
-    sceneMatrix = sceneMatrix * Mat4d(array) ;
+    sceneMatrix = sceneMatrix * perspective;
+}
+
+Vec3i Renderer::vertexShader(Vertex vertex) {
+    Vec4d coordinates = Vec4d::cast(vertex.getCoordinates());
+    coordinates[3] = 1;
+
+    coordinates = sceneMatrix * objectMatrix * coordinates;
+    coordinates = coordinates / coordinates[3];
+    Vec3i answer = Vec3i::cast(Vec3d::cast(coordinates));
+
+    return answer;
+}
+
+Vec3d Renderer::getBarycentricCoordinate(Vec3i coordinates[3], Vec3i point) {
+    Mat3d matrix;
+    for (int i = 0; i < 3; ++i) {
+        matrix[0][i] = coordinates[i][0];
+        matrix[1][i] = coordinates[i][1];
+        matrix[2][i] = 1;
+    }
+    matrix = matrix.getInverseMatrix();
+    Vec3d answer = matrix * Vec3d::cast(point);
+    return answer;
+}
+
+bool Renderer::fragmentShader(Vec3d v, uint &color) {
+    double intensity = (v * this->intensity + 1) / 2;
+    double x = textureCoordinates[0] * v;
+    double y = textureCoordinates[1] * v;
+    color = texture->getColor(x, y);
+    int r = qRed(color) * intensity;
+    int g = qGreen(color) * intensity;
+    int b = qBlue(color) * intensity;
+    color = qRgb(r, g, b);
+    return false;
 }
