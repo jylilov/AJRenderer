@@ -26,7 +26,7 @@ public:
     static Vector cast(const Vector<dimCount, newT> &vector) {
         Vector v;
         for (uint i = 0; i < dimCount; ++i) {
-            v[i] = vector[i];
+            v[i] = static_cast<newT>(vector[i]);
         }
         return v;
     }
@@ -49,7 +49,7 @@ public:
         va_end(list);
     }
 
-    T getLength() {
+    T getLength() const {
         T answer = T();
         for (uint i = 0; i < dimCount; ++i) {
             answer += items[i] * items[i];
@@ -57,8 +57,22 @@ public:
         return qSqrt(answer);
     }
 
-    void normalize() {
-        *this = *this / getLength();
+    Vector getNormalVector() const {
+        return *this / getLength();
+    }
+
+    Vector<dimCount - 1, T> getProjection() const {
+        T del = items[dimCount - 1];
+        if (del == 0)
+            return Vector<dimCount - 1, T>::cast(*this);
+        else
+            return Vector<dimCount - 1, T>::cast(*this / del);
+    }
+
+    Vector<dimCount + 1, T> getExtention(T fill = 1) const {
+        Vector<dimCount + 1, T> ans = Vector<dimCount + 1, T>::cast(*this);
+        ans[dimCount] = fill;
+        return ans;
     }
 
     Vector &operator += (const Vector &vector) {
@@ -93,6 +107,10 @@ public:
         }
         return *this;
     }
+
+    Vector operator - () const {
+        return *this * T(-1);
+    }
 };
 
 template <uint dimCount, typename T>
@@ -105,6 +123,12 @@ template <uint dimCount, typename T>
 Vector<dimCount, T> operator * (const Vector<dimCount, T> &vertex, const T &value) {
     Vector<dimCount, T> answer = vertex;
     return answer *= value;
+}
+
+template <uint dimCount, typename T>
+Vector<dimCount, T> operator - (const Vector<dimCount, T> &v1, const Vector<dimCount, T> &v2) {
+    Vector<dimCount, T> answer = v1;
+    return answer += -v2;
 }
 
 template <uint dimCount, typename T>
@@ -121,7 +145,16 @@ Vector<dimCount, T> operator / (const Vector<dimCount, T> &v1, const T &value) {
     return v1 * (1 / value);
 }
 
+template <typename T>
+Vector<3, T> cross(Vector<3, T> v1, Vector<3, T> v2) {
+    return Vector<3,T>(
+            v1[1] * v2[2] - v1[2] * v2[1],
+            v1[2] * v2[0] - v1[0] * v2[2],
+            v1[0] * v2[1] - v1[1] * v2[0]);
+}
+
 typedef Vector<3, int> Vec3i;
+typedef Vector<3, uchar> VecColor;
 typedef Vector<4, double> Vec4d;
 typedef Vector<3, double> Vec3d;
 typedef Vector<2, double> Vec2d;

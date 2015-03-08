@@ -21,7 +21,6 @@ MainWindow::MainWindow() {
 
 void MainWindow::refresh() {
     if (!renderer) return;
-
     imageLabel->setPixmap(renderer->render());
     imageLabel->resize(imageLabel->pixmap()->size());
 }

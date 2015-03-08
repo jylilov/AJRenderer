@@ -17,7 +17,8 @@ set(SOURCES
     renderer.cpp
     objectmodel.cpp
     texture.cpp
-    vertex.cpp)
+    vertex.cpp
+    shader.cpp)
 
 set(HEADERS
     mainwindow.h
@@ -26,7 +27,8 @@ set(HEADERS
     objectmodel.h
     matrix.h
     texture.h
-    vertex.h)
+    vertex.h
+    shader.h)
 
 add_executable(AJRenderer ${SOURCES} ${HEADERS})
 

@@ -59,6 +59,14 @@ public:
         va_end(list);
     }
 
+    Matrix<colCount, rowCount, T> getTransposeMatrix() const {
+        Matrix<colCount, rowCount, T> m;
+        for (uint i = 0; i < rowCount; ++i)
+            for (uint j = 0; j < colCount; ++j)
+                m[j][i] = items[i][j];
+        return m;
+    }
+
     Matrix<rowCount - 1, colCount - 1, T> getMinor(uint x, uint y) const {
         Q_ASSERT(x <= rowCount && y <= colCount);
         Matrix<rowCount - 1, colCount - 1, T> answer;
@@ -104,12 +112,12 @@ public:
     }
 
     Vector<colCount, T> &operator [] (uint index) {
-        Q_ASSERT(index < colCount);
+        Q_ASSERT(index < rowCount);
         return items[index];
     }
 
     const Vector<colCount, T> &operator [] (uint index) const {
-        Q_ASSERT(index < colCount);
+        Q_ASSERT(index < rowCount);
         return items[index];
     }
 
@@ -155,7 +163,7 @@ Vector<rowCount, T> operator* (
 
 
 template <uint dim1, uint dim2, uint dim3, typename T>
-Matrix<dim1, dim3, T> operator* (
+Matrix<dim1, dim3, T> operator * (
         const Matrix<dim1, dim2, T> &m1,
         const Matrix<dim2, dim3, T> &m2)
 {

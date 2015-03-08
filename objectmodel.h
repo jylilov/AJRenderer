@@ -13,8 +13,12 @@ private:
 public:
     static ObjectModel *fromWareFrontObjectFile(QString file_path);
 
-    void setTexture(Texture *texture = 0) { this->texture = texture; }
-    Texture *getTexture() { return texture; }
+    void setDiffuseTexture(Texture *texture = 0) { this->diffuseTexture = texture; }
+    Texture *getDiffuseTexture() { return diffuseTexture; }
+    void setNmTexture(Texture *nmTexture) { ObjectModel::nmTexture = nmTexture; }
+    Texture *getNmTexture() const { return nmTexture; }
+    Texture *getSpecTexture() const { return specTexture; }
+    void setSpecTexture(Texture *specTexture) { ObjectModel::specTexture = specTexture; }
 
     double getSize() const { return size; }
     void setSize(double size) { ObjectModel::size = size; updateMatrix(); }
@@ -35,5 +39,7 @@ private:
     QVector<Vec3d> normalVectors;
     QVector<Vector<3, Vertex> > triangles;
 
-    Texture *texture;
+    Texture *diffuseTexture;
+    Texture *specTexture;
+    Texture *nmTexture;
 };

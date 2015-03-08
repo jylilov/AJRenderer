@@ -3,40 +3,46 @@
 #include <QPixmap>
 #include "vector.h"
 #include "objectmodel.h"
+#include "shader.h"
 
 class Renderer
 {
+public:
+    static Mat4d getViewMatrix(Vec3d eye, Vec3d center, Vec3d up);
+    static Mat4d getProjectionMatrix(double coefficient);
+    static Mat4d getViewportMatrix(uint width, uint height);
+    static Vec3d getBarycentricCoordinate(Vec3d coordinates[3], Vec3i point);
+    static void drawTriangle(Vec4d t[3], IShader *shader, QImage *frame, Buffer *zBuffer);
+    static void drawPixel(int const &x, int const &y, VecColor const &color, QImage *frame);
 private:
     uint width;
+
     uint height;
+    Vec3d lightVector;
+    Vec3d eye;
+    Vec3d center;
 
-    Vec3d intensity;
-    Vec3d textureCoordinates[2];
-    Texture *texture;
+    Vec3d up;
+    Mat4d viewport;
+    Mat4d projection;
 
-    Mat4d objectMatrix;
-    Mat4d sceneMatrix;
+    Mat4d view;
 
-    QImage image;
-    double *zBuffer;
+    int anti_aliasing;
 
+    Mat4d shadowMatrix;
+    QImage *image;
+    Buffer *zBuffer;
+    Buffer *shadowBuffer;
     QList<ObjectModel *> objects;
 public:
     Renderer(uint width, uint height);
-    ~Renderer() { delete [] zBuffer; }
-
+    ~Renderer() {}
     QPixmap render();
     void addObject(ObjectModel *object) { objects.append(object); }
     void removeObject(ObjectModel *object) { objects.removeOne(object); }
 private:
-    void renderTriangle(Vec3i t[3], Texture *text = 0);
-    void renderObject(ObjectModel *object);
-    void putPixel(int x, int y, uint color);
-    bool isOnScreen(int x, int y);
-    Vec3i vertexShader(Vertex vertex);
-    bool fragmentShader(Vec3d v, uint &color);
-
-    Vec3d getBarycentricCoordinate(Vec3i coordinates[3], Vec3i point);
-
-    void updateMatrix();
+    void drawObject(ObjectModel *object);
+    void calcObjectShadow(ObjectModel *object);
+    QImage resize(QImage *image);
 };

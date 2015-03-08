@@ -40,6 +40,7 @@ ObjectModel *ObjectModel::fromWareFrontObjectFile(QString file_path) {
 
                 vector[i] = iterator->toDouble();
             }
+            vector[1] *= -1;
             object->normalVectors.push_back(vector);
         } else if (mode == "f") {
             Vector<3, Vertex> t;
@@ -87,5 +88,5 @@ void ObjectModel::updateMatrix() {
             0.0, 0.0, 0.0, 1.0
     );
 
-    modelMatrix = Mat4d::getScaleMatrix(size / 2) * turnX * turnY * turnZ;
+    modelMatrix = Mat4d::getScaleMatrix(size) * turnX * turnY * turnZ;
 }
