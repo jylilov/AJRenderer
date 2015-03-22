@@ -46,6 +46,7 @@ Renderer::Renderer(uint width, uint height)
 }
 
 QPixmap Renderer::render() {
+    QTime start = QTime::currentTime();
     uint width = this->width * anti_aliasing;
     uint height = this->height * anti_aliasing;
 
@@ -81,6 +82,7 @@ QPixmap Renderer::render() {
     delete shadowBuffer;
     delete image;
 
+    qDebug() << start.elapsed();
     return ans;
 }
 

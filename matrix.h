@@ -32,10 +32,9 @@ public:
         for (uint i = 0; i < rowCount; ++i) m[i][i] = 1;
         return m;
     }
-//TODO more beautiful
     static Matrix getScaleMatrix(double scale) {
         Matrix m = getIdentityMatrix();
-        for (uint i = 0; i < rowCount - 1; ++i) m[i][i] *= scale;
+        for (uint i = 0; i < rowCount; ++i) m[i][i] *= scale;
         return m;
     }
 private:
