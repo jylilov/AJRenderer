@@ -22,7 +22,7 @@ public:
     virtual ~ShadowShader() {}
 
     virtual Vec4d vertexShader(Vertex vertex) {
-        return matrix * vertex.getCoordinates().getExtention();
+        return matrix * vertex.getCoordinates().getExtension();
     }
 
     virtual bool fragmentShader(Vec3d barycentricCoordinates, VecColor &resultColor) {

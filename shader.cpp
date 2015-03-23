@@ -1,7 +1,7 @@
 #include "shader.h"
 
 Vec4d Shader::vertexShader(Vertex vertex) {
-    Vec4d coordinates = vertex.getCoordinates().getExtention();
+    Vec4d coordinates = vertex.getCoordinates().getExtension();
 
     coordinates = vertexMatrix * coordinates;
     verticesCoordinates.append(vertex.getCoordinates());
@@ -14,7 +14,7 @@ Vec4d Shader::vertexShader(Vertex vertex) {
 bool Shader::fragmentShader(Vec3d barycentricCoordinates, VecColor &resultColor) {
     interpolate(barycentricCoordinates);
 
-    Vec3d sb_p = (shadow * vertexCoourdinate.getExtention()).getProjection();
+    Vec3d sb_p = (shadow * vertexCoourdinate.getExtension()).getProjection();
 
     int x = qRound(sb_p[0]);
     int y = qRound(sb_p[1]);
@@ -28,8 +28,8 @@ bool Shader::fragmentShader(Vec3d barycentricCoordinates, VecColor &resultColor)
 
     Vec3d nm = Vec3d::cast(nmTexture->get(textureCoordinate)) / 255.0 * 2.0 + Vec3d(-1.0, -1.0, -1.0);
 
-    Vec3d n = (normalMatrix * nm.getExtention(0.0)).getProjection().getNormalVector();
-    Vec3d l = (view * lightVector.getExtention(0.0)).getProjection().getNormalVector();
+    Vec3d n = (normalMatrix * nm.getExtension(0.0)).getProjection().getNormalVector();
+    Vec3d l = (view * lightVector.getExtension(0.0)).getProjection().getNormalVector();
 
     Vec3d reflect = (n * (n * l * 2.0) - l).getNormalVector();
 

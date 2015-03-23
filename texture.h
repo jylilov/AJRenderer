@@ -38,6 +38,7 @@ private:
     }
 public:
     ~Image() { delete [] data; }
+
     void fill(uchar channel) {
         memset(data, channel, dataSize);
     }

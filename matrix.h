@@ -9,12 +9,12 @@ class Matrix;
 class Determinant {
 public:
     template <typename T>
-    static T countDeterminant(const Matrix<1, 1, T> &matrix) {
+    static T countDeterminant(Matrix<1, 1, T> const &matrix) {
         return matrix[0][0];
     }
 
     template <uint dimCount, typename T>
-    static T countDeterminant(const Matrix<dimCount, dimCount, T> &matrix) {
+    static T countDeterminant(Matrix<dimCount, dimCount, T> const &matrix) {
         T answer = T();
         for (uint i = 0; i < dimCount; ++i) {
             answer += matrix.getAlgebraicComplement(i, 0) * matrix[i][0];
@@ -42,7 +42,7 @@ private:
 public:
     Matrix() {}
 
-    Matrix(const Matrix &m) { *this = m; }
+    Matrix(Matrix const &m) { *this = m; }
 
     Matrix(T first, ...) {
         items[0][0] = first;
@@ -83,11 +83,11 @@ public:
         return ((x + y) % 2 ? -1 : 1) * getMinor(x, y).getDeterminant();
     }
 
-    T getDeterminant() {
+    T getDeterminant() const {
         return Determinant::countDeterminant(*this);
     }
 
-    Matrix<colCount, rowCount, T> getAdjointMatrix() {
+    Matrix<colCount, rowCount, T> getAdjointMatrix() const {
         Matrix<colCount, rowCount, T> answer;
         for (uint i = 0; i < colCount; ++i)
             for (uint j = 0; j < rowCount; ++j)
@@ -95,18 +95,18 @@ public:
         return answer;
     }
 
-    Matrix getInverseMatrix() {
+    Matrix getInverseMatrix() const {
         return getAdjointMatrix() / getDeterminant();
     }
 
-    Matrix &operator *= (const T &value) {
+    Matrix &operator *= (T const &value) {
         for (uint i = 0; i < rowCount; ++i) {
             items[i] *= value;
         }
         return *this;
     }
 
-    Matrix &operator /= (const T &value) {
+    Matrix &operator /= (T const &value) {
         return *this *= (1 / value);
     }
 
@@ -120,7 +120,7 @@ public:
         return items[index];
     }
 
-    Matrix &operator = (const Matrix &m) {
+    Matrix &operator = (Matrix const &m) {
         for (uint i = 0; i < colCount; ++i) {
             this->items[i] = m.items[i];
         }
@@ -130,8 +130,8 @@ public:
 
 template <uint rowCount, uint colCount, typename T>
 Matrix<rowCount, colCount, T> operator * (
-        const Matrix<rowCount, colCount, T> &matrix,
-        const T &value)
+        Matrix<rowCount, colCount, T> const &matrix,
+        T const &value)
 {
     Matrix<rowCount, colCount, T> answer = matrix;
     return answer *= value;
@@ -139,16 +139,16 @@ Matrix<rowCount, colCount, T> operator * (
 
 template <uint rowCount, uint colCount, typename T>
 Matrix<rowCount, colCount, T> operator / (
-        const Matrix<rowCount, colCount, T> &matrix,
-        const T &value)
+        Matrix<rowCount, colCount, T> const &matrix,
+        T const &value)
 {
     return matrix * (1 / value);
 }
 
 template <uint colCount, uint rowCount, typename T>
 Vector<rowCount, T> operator* (
-        const Matrix<rowCount, colCount, T> &matrix,
-        const Vector<colCount, T> &vector)
+        Matrix<rowCount, colCount, T> const &matrix,
+        Vector<colCount, T> const &vector)
 {
     Vector<rowCount, T> answer;
     for (int i = 0; i < rowCount; ++i) {
@@ -163,8 +163,8 @@ Vector<rowCount, T> operator* (
 
 template <uint dim1, uint dim2, uint dim3, typename T>
 Matrix<dim1, dim3, T> operator * (
-        const Matrix<dim1, dim2, T> &m1,
-        const Matrix<dim2, dim3, T> &m2)
+        Matrix<dim1, dim2, T> const &m1,
+        Matrix<dim2, dim3, T> const &m2)
 {
     Matrix<dim1, dim3, T> answer;
     for (int i = 0; i < dim1; ++i) {

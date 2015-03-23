@@ -6,7 +6,7 @@ template <uint dimCount, typename T>
 class Vector {
 public:
     template <uint oldDimCount>
-    static Vector cast(const Vector<oldDimCount, T> &vector) {
+    static Vector cast(Vector<oldDimCount, T> const &vector) {
         Vector v;
         for (uint i = 0; i < qMin(oldDimCount, dimCount); ++i) {
             v[i] = vector[i];
@@ -14,7 +14,7 @@ public:
         return v;
     }
 
-    static Vector<dimCount, int> cast(const Vector<dimCount, double> &vector) {
+    static Vector<dimCount, int> cast(Vector<dimCount, double> const &vector) {
         Vector<dimCount, int> v;
         for (uint i = 0; i < dimCount; ++i) {
             v[i] = qRound(vector[i]);
@@ -23,7 +23,7 @@ public:
     }
 
     template <typename newT>
-    static Vector cast(const Vector<dimCount, newT> &vector) {
+    static Vector cast(Vector<dimCount, newT> const &vector) {
         Vector v;
         for (uint i = 0; i < dimCount; ++i) {
             v[i] = static_cast<newT>(vector[i]);
@@ -34,7 +34,7 @@ private:
     T items[dimCount];
 public:
     Vector() { for (uint i = 0; i < dimCount; ++i) items[i] = T(); }
-    Vector(const Vector &v) { *this = v; }
+    Vector(Vector const &v) { *this = v; }
 
     Vector(T first, ...) {
         items[0] = first;
@@ -69,25 +69,25 @@ public:
             return Vector<dimCount - 1, T>::cast(*this / del);
     }
 
-    Vector<dimCount + 1, T> getExtention(T fill = 1) const {
+    Vector<dimCount + 1, T> getExtension(T fill = 1) const {
         Vector<dimCount + 1, T> ans = Vector<dimCount + 1, T>::cast(*this);
         ans[dimCount] = fill;
         return ans;
     }
 
-    Vector &operator += (const Vector &vector) {
+    Vector &operator += (Vector const &vector) {
         for (uint i = 0; i < dimCount; ++i)
             items[i] += vector[i];
         return *this;
     }
 
-    Vector &operator *= (const T &value) {
+    Vector &operator *= (T const &value) {
         for (uint i = 0; i < dimCount; ++i)
             items[i] *= value;
         return *this;
     }
 
-    Vector &operator /= (const T &value) {
+    Vector &operator /= (T const &value) {
         return *this *= (1 / value);
     }
 
@@ -101,7 +101,7 @@ public:
         return items[index];
     }
 
-    Vector &operator = (const Vector &v) {
+    Vector &operator = (Vector const &v) {
         for (int i = 0; i < dimCount; ++i) {
             this->items[i] = v.items[i];
         }
@@ -114,25 +114,25 @@ public:
 };
 
 template <uint dimCount, typename T>
-Vector<dimCount, T> operator + (const Vector<dimCount, T> &v1, const Vector<dimCount, T> &v2) {
+Vector<dimCount, T> operator + (Vector<dimCount, T> const &v1, Vector<dimCount, T> const &v2) {
     Vector<dimCount, T> answer = v1;
     return answer += v2;
 }
 
 template <uint dimCount, typename T>
-Vector<dimCount, T> operator * (const Vector<dimCount, T> &vertex, const T &value) {
+Vector<dimCount, T> operator * (Vector<dimCount, T> const &vertex, T const &value) {
     Vector<dimCount, T> answer = vertex;
     return answer *= value;
 }
 
 template <uint dimCount, typename T>
-Vector<dimCount, T> operator - (const Vector<dimCount, T> &v1, const Vector<dimCount, T> &v2) {
+Vector<dimCount, T> operator - (Vector<dimCount, T> const &v1, Vector<dimCount, T> const &v2) {
     Vector<dimCount, T> answer = v1;
     return answer += -v2;
 }
 
 template <uint dimCount, typename T>
-T operator * (const Vector<dimCount, T> &v1, const Vector<dimCount, T> &v2) {
+T operator * (Vector<dimCount, T> const &v1, Vector<dimCount, T> const &v2) {
     T answer = T();
     for (int i = 0; i < dimCount; ++i) {
         answer += v1[i] * v2[i];
@@ -141,12 +141,12 @@ T operator * (const Vector<dimCount, T> &v1, const Vector<dimCount, T> &v2) {
 }
 
 template <uint dimCount, typename T>
-Vector<dimCount, T> operator / (const Vector<dimCount, T> &v1, const T &value) {
+Vector<dimCount, T> operator / (Vector<dimCount, T> const &v1, T const &value) {
     return v1 * (1 / value);
 }
 
 template <typename T>
-Vector<3, T> cross(Vector<3, T> v1, Vector<3, T> v2) {
+Vector<3, T> cross(Vector<3, T> const &v1, Vector<3, T> const &v2) {
     return Vector<3,T>(
             v1[1] * v2[2] - v1[2] * v2[1],
             v1[2] * v2[0] - v1[0] * v2[2],
