@@ -16,50 +16,44 @@ public:
     static Texture *fromFile(QString filePath);
     static Buffer *createBuffer(uint width, uint height);
 private:
-    QImage image;
+//    QImage image;
+    uchar *data;
+    uint width;
+    uint height;
+    uint dataSize;
 
-    Image() {}
-    Image(QImage img) : image(img) {}
-public:
-    void save() {
-        QImage img(image.width(), image.height(), QImage::Format_RGB888);
-        for (int i = 0; i < img.width(); ++i) {
-            for (int j = 0; j < img.height(); ++j) {
-                uchar c = get(i, j)[0];
-                img.setPixel(i, j, qRgb(c, c, c));
-            }
-        }
-        img.save("/home/jylilov/TEMP/temp.png");
+    Image(uint width, uint height) : width(width), height(height), dataSize(width * height * componentCount) {
+        data = new uchar[dataSize];
     }
-
+    Image(uint width, uint height, uchar *data) {
+        Image(width, height);
+        memcpy(this->data, data, dataSize);
+    }
+public:
+    ~Image() { delete [] data; }
     void fill(uchar channel) {
-        uint size = image.width() * image.height() * componentCount;
-        uchar *bits = image.bits();
-
-        for (uint i = 0; i < size; ++i)
-            bits[i] = channel;
+        memset(data, channel, dataSize);
     }
 
     Vector<componentCount, uchar> get(Vec2d vector) const {
-        int x = qRound(vector[0] * image.width());
-        int y = qRound(vector[1] * image.height());
+        int x = qRound(vector[0] * width);
+        int y = qRound(vector[1] * height);
         return get(x, y);
     }
 
     Vector<componentCount, uchar> get(int x, int y) const {
-
         Vector<componentCount, uchar> ans;
-        if (!(x > 0 && y > 0 && x < image.width() && y < image.height()))
+        if (!(x > 0 && y > 0 && x < width && y < height))
             return ans;
         for (uint i = 0; i < componentCount; ++i) {
-            ans[i] = image.bits()[(x  + y * image.height()) * componentCount + i];
+            ans[i] = data[(x + y * height) * componentCount + i];
         }
         return ans;
     }
 
     void set(int x, int y, uchar const &value) {
         for (uint i = 0; i < componentCount; ++i) {
-            image.bits()[(x  + y * image.height()) * componentCount + i] = value;
+            data[(x  + y * height) * componentCount + i] = value;
         }
     }
 

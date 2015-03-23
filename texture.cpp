@@ -2,12 +2,12 @@
 
 template <>
 Buffer *Buffer::createBuffer(uint width, uint height) {
-    QImage img(width, height, QImage::Format_Indexed8);
-    return new Buffer(img);
+    return new Buffer(width, height);
 }
 
 template <>
 Texture *Texture::fromFile(QString filePath) {
     QImage img(filePath);
-    return new Texture(img.convertToFormat(QImage::Format_RGB888));
+    img = img.convertToFormat(QImage::Format_RGB888);
+    return new Texture(img.width(), img.height(), img.bits());
 }
