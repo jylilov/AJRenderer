@@ -36,7 +36,7 @@ Mat4d Renderer::getViewportMatrix(uint width, uint height) {
 }
 
 Renderer::Renderer(uint width, uint height)
-        : width(width), height(height), anti_aliasing(2)
+        : width(width), height(height), anti_aliasing(1)
 {
     // TODO move to constants
     lightVector = Vec3d(1.0, -1.0, 1.0).getNormalVector();
@@ -46,16 +46,14 @@ Renderer::Renderer(uint width, uint height)
 }
 
 QPixmap Renderer::render() {
-    uint width = this->width * anti_aliasing;
-    uint height = this->height * anti_aliasing;
+    uint width = this->width << anti_aliasing;
+    uint height = this->height << anti_aliasing;
 
     zBuffer = Buffer::createBuffer(width, height);
     shadowBuffer = Buffer::createBuffer(width, height);
-    image = new QImage(width, height, QImage::Format_RGB888);
 
+    image = new QImage(width, height, QImage::Format_RGB888);
     image->fill(qRgb(0, 0, 0));
-    shadowBuffer->fill(0);
-    zBuffer->fill(0);
 
     viewport = getViewportMatrix(width, height);
     projection = getProjectionMatrix(0);
@@ -66,7 +64,6 @@ QPixmap Renderer::render() {
     for (QList<ObjectModel *>::const_iterator i = objects.constBegin(); i != objects.constEnd(); ++i)
         calcObjectShadow(*i);
 
-    viewport = getViewportMatrix(width, height);
     projection = getProjectionMatrix(-1 / (eye - center).getLength());
     view = getViewMatrix(eye, center, up);
 
@@ -82,25 +79,39 @@ QPixmap Renderer::render() {
     return ans;
 }
 
+struct Color {
+    uchar r, g, b;
+};
+
+void operator += (Color &c1, Color const &c2) {
+    c1.r += c2.r;
+    c1.g += c2.g;
+    c1.b += c2.b;
+}
+
 QImage Renderer::resize(QImage *image) {
     QImage result(this->width, this->height, QImage::Format_RGB888);
+    result.fill(0);
+
+    int oldBitsLength = image->width() * image->height() * 3;
+    uchar *oldBits = image->bits();
+
+    int del = anti_aliasing << anti_aliasing;
+    for (int i = 0; i < oldBitsLength; ++i) {
+        oldBits[i] >>= del;
+    }
+
+    Color *oldColors = (Color *)image->bits();
+    Color *newColors = (Color *)result.bits();
+
+    int side = 1 << anti_aliasing;
     for (int i = 0; i < width; ++i) {
         for (int j = 0; j < height; ++j) {
-            int r = 0;
-            int g = 0;
-            int b = 0;
-            for (int ii = 0; ii < anti_aliasing; ++ii) {
-                for (int jj = 0; jj < anti_aliasing; ++jj) {
-                    r += qRed(image->pixel(i * anti_aliasing + ii, j * anti_aliasing + jj));
-                    g += qGreen(image->pixel(i * anti_aliasing + ii, j * anti_aliasing + jj));
-                    b += qBlue(image->pixel(i * anti_aliasing + ii, j * anti_aliasing + jj));
+            for (int ii = 0; ii < side; ++ii) {
+                for (int jj = 0; jj < side; ++jj) {
+                    newColors[i * width + j] += oldColors[(i * side + ii) * width * side + j * side + jj];
                 }
             }
-            r /= anti_aliasing * anti_aliasing;
-            g /= anti_aliasing * anti_aliasing;
-            b /= anti_aliasing * anti_aliasing;
-
-            result.setPixel(i, j, qRgb(r, g, b));
         }
     }
     return result;

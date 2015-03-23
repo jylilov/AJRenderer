@@ -23,6 +23,7 @@ private:
 
     Image(uint width, uint height) {
         initialize(width, height);
+        fill(0);
     }
 
     Image(uint width, uint height, uchar *data) {
@@ -61,7 +62,7 @@ public:
 
     void set(int x, int y, uchar value) {
         for (uint i = 0; i < componentCount; ++i) {
-            data[(x  + y * height) * componentCount + i] = value;
+            data[(x + y * height) * componentCount + i] = value;
         }
     }
 

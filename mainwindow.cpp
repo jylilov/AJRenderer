@@ -23,12 +23,16 @@ void MainWindow::refresh() {
     if (!renderer) return;
     QTime startTime = QTime::currentTime();
     QPixmap renderedPixmap = renderer->render();
-    QMessageBox messageBox(this);
-    QString text;
-    text.sprintf("%.2f sec", startTime.elapsed() / 1000.0);
-    messageBox.setText(text);
-    messageBox.exec();
+    showTime(startTime.elapsed());
     imageLabel->setPixmap(renderedPixmap);
     imageLabel->resize(imageLabel->pixmap()->size());
+}
+
+void MainWindow::showTime(int time) {
+    QMessageBox messageBox(this);
+    QString text;
+    text.sprintf("%.2f sec", time / 1000.0);
+    messageBox.setText(text);
+    messageBox.exec();
 }
 

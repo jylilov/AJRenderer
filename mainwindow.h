@@ -27,6 +27,7 @@ private:
 private slots:
     void refresh();
 
+    void showTime(int time);
 };
 
 #endif //MAINWINDOW_H
