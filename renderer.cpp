@@ -46,7 +46,6 @@ Renderer::Renderer(uint width, uint height)
 }
 
 QPixmap Renderer::render() {
-    QTime start = QTime::currentTime();
     uint width = this->width * anti_aliasing;
     uint height = this->height * anti_aliasing;
 
@@ -67,8 +66,6 @@ QPixmap Renderer::render() {
     for (QList<ObjectModel *>::const_iterator i = objects.constBegin(); i != objects.constEnd(); ++i)
         calcObjectShadow(*i);
 
-    shadowBuffer->save();
-
     viewport = getViewportMatrix(width, height);
     projection = getProjectionMatrix(-1 / (eye - center).getLength());
     view = getViewMatrix(eye, center, up);
@@ -82,7 +79,6 @@ QPixmap Renderer::render() {
     delete shadowBuffer;
     delete image;
 
-    qDebug() << start.elapsed();
     return ans;
 }
 

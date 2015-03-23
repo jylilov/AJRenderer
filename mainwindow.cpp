@@ -21,7 +21,14 @@ MainWindow::MainWindow() {
 
 void MainWindow::refresh() {
     if (!renderer) return;
-    imageLabel->setPixmap(renderer->render());
+    QTime startTime = QTime::currentTime();
+    QPixmap renderedPixmap = renderer->render();
+    QMessageBox messageBox(this);
+    QString text;
+    text.sprintf("%.2f sec", startTime.elapsed() / 1000.0);
+    messageBox.setText(text);
+    messageBox.exec();
+    imageLabel->setPixmap(renderedPixmap);
     imageLabel->resize(imageLabel->pixmap()->size());
 }
 
