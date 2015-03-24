@@ -36,7 +36,7 @@ Mat4d Renderer::getViewportMatrix(uint width, uint height) {
 }
 
 Renderer::Renderer(uint width, uint height)
-        : width(width), height(height), anti_aliasing(1)
+        : width(width), height(height), anti_aliasing(0)
 {
     // TODO move to constants
     lightVector = Vec3d(1.0, -1.0, 1.0).getNormalVector();

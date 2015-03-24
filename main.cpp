@@ -5,12 +5,12 @@
 
 //static const QString OBJECT = "/home/jylilov/TEMP/diablo3.obj";
 //static const QString DIFFUSE_TEXTURE = "/home/jylilov/TEMP/diablo3_diffuse.png";
-//static const QString NM_TEXTURE = "/home/jylilov/TEMP/diabl/o3_nm.png";
+//static const QString NM_TEXTURE = "/home/jylilov/TEMP/diablo3_nm_tangent.png";
 //static const QString SPEC_TEXTURE = "/home/jylilov/TEMP/diablo3_spec.png";
-
+//
 static const QString OBJECT = "/home/jylilov/TEMP/african_head.obj";
 static const QString DIFFUSE_TEXTURE = "/home/jylilov/TEMP/african_head_diffuse.png";
-static const QString NM_TEXTURE = "/home/jylilov/TEMP/african_head_nm.png";
+static const QString NM_TEXTURE = "/home/jylilov/TEMP/african_head_nm_tangent.png";
 static const QString SPEC_TEXTURE = "/home/jylilov/TEMP/african_head_spec.png";
 
 static const uint WIDTH = 600;

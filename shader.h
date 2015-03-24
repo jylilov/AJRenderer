@@ -53,10 +53,12 @@ private:
 
     QList<Vec3d> verticesCoordinates;
     QList<Vec2d> textureCoordinates;
+    QList<Vec3d> vertexNormals;
     uint currentVertex;
 
     Vec2d textureCoordinate;
-    Vec3d vertexCoourdinate;
+    Vec3d vertexCoordinate;
+    Vec3d vertexNormal;
 
     Shader() {}
 public:
