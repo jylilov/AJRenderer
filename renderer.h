@@ -11,8 +11,8 @@ public:
     static Mat4d getViewMatrix(Vec3d eye, Vec3d center, Vec3d up);
     static Mat4d getProjectionMatrix(double coefficient);
     static Mat4d getViewportMatrix(uint width, uint height);
-    static Vec3d getBarycentricCoordinate(Vec3d coordinates[3], Vec3i point);
-    static void drawTriangle(Vec4d t[3], IShader *shader, QImage *frame, Buffer *zBuffer);
+    static Vec3d getBarycentricCoordinate(Vec3d const coordinates[3], Vec3i const &point);
+    static void drawTriangle(Vec4d triangle[3], AbstractShader *shader, QImage *frame, Buffer *zBuffer);
     static void drawPixel(int const &x, int const &y, VecColor const &color, QImage *frame);
 protected:
     uint width;

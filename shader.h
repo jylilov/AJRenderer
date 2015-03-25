@@ -4,25 +4,26 @@
 #include "vertex.h"
 #include "texture.h"
 
-class IShader {
+class AbstractShader {
 public:
-    virtual ~IShader() {}
-    virtual Vec4d vertexShader(Vertex vertex) = 0;
+    virtual ~AbstractShader() {}
+    virtual Vec4d vertexShader(Vertex vertex, uint nVertex) = 0;
     virtual bool fragmentShader(Vec3d barycentricCoordinates, VecColor &resultColor) = 0;
-    virtual bool nextTriangle() = 0;
 };
 
-class ShadowShader: public IShader {
+class ShadowShader: public AbstractShader {
 private:
-    Mat4d matrix;
-
-    ShadowShader() {}
+    Mat4d uniformShadowMatrix;
 public:
-    ShadowShader(Mat4d const &matrix) : matrix(matrix) {}
+    ShadowShader()  {}
     virtual ~ShadowShader() {}
 
-    virtual Vec4d vertexShader(Vertex vertex) {
-        return matrix * vertex.getCoordinates().getExtension();
+    void setUniformShadowMatrix(Mat4d const &uniformShadowMatrix) {
+        this->uniformShadowMatrix = uniformShadowMatrix;
+    }
+
+    virtual Vec4d vertexShader(Vertex vertex, uint nVertex) {
+        return uniformShadowMatrix * vertex.getCoordinates().getExtension();
     }
 
     virtual bool fragmentShader(Vec3d barycentricCoordinates, VecColor &resultColor) {
@@ -30,53 +31,91 @@ public:
         return false;
     }
 
-    virtual bool nextTriangle() { return true; };
 };
 
-class Shader: public IShader {
+class Shader: public AbstractShader {
 private:
-    Mat4d viewport;
-    Mat4d projection;
-    Mat4d view;
-    Mat4d model;
-    Mat4d shadow;
+    Mat4d uniformViewport;
+    Mat4d uniformProjection;
+    Mat4d uniformView;
+    Mat4d uniformModel;
+    Mat4d uniformShadow;
 
-    Texture *diffTexture;
-    Texture *nmTexture;
-    Texture *specTexture;
+    Texture *uniformDiffTexture;
+    Texture *uniformNmTexture;
+    Texture *uniformSpecTexture;
 
-    Vec3d lightVector;
-    Buffer *shadowBuffer;
+    Vec3d uniformLightVector;
+    Buffer *uniformShadowBuffer;
 
+    Mat4d shadowMatrix;
+    Mat4d lightMatrix;
     Mat4d vertexMatrix;
     Mat4d normalMatrix;
 
-    QList<Vec3d> verticesCoordinates;
-    QList<Vec2d> textureCoordinates;
-    uint currentVertex;
+    Matrix<3, 3, double> varyingVertexCoordinate;
+    Matrix<2, 3, double> varyingTextureCoordinate;
 
-    Vec2d textureCoordinate;
-    Vec3d vertexCoordinate;
-
-    Shader() {}
 public:
-    Shader(Mat4d viewport,
-            Mat4d projection,
-            Mat4d view,
-            Mat4d model,
-            Mat4d shadow,
-            Buffer *shadowBuffer,
-            Vec3d lightVector,
-            Texture *diffTexture,
-            Texture *nmTexture,
-            Texture *specTexture
-    );
+    Shader() {}
     virtual ~Shader() {}
 
-    virtual Vec4d vertexShader(Vertex vertex);
+    virtual Vec4d vertexShader(Vertex vertex, uint nVertex);
     virtual bool fragmentShader(Vec3d barycentricCoordinates, VecColor &resultColor);
 
-    virtual bool nextTriangle();
-private:
-    void interpolate(Vec3d barycentricCoordinates);
+    void update();
+
+    void setUniformViewport(Mat4d const &uniformViewport) {
+        this->uniformViewport = uniformViewport;
+    }
+
+    void setUniformProjection(Mat4d const &uniformProjection) {
+        this->uniformProjection = uniformProjection;
+    }
+
+    void setUniformView(Mat4d const &uniformView) {
+        this->uniformView = uniformView;
+    }
+
+    void setUniformModel(Mat4d const &uniformModel) {
+        this->uniformModel = uniformModel;
+    }
+
+    void setUniformShadow(Mat4d const &uniformShadow) {
+        this->uniformShadow = uniformShadow;
+    }
+
+    void setUniformDiffTexture(Texture *uniformDiffTexture) {
+        this->uniformDiffTexture = uniformDiffTexture;
+    }
+
+    void setUniformNmTexture(Texture *uniformNmTexture) {
+        this->uniformNmTexture = uniformNmTexture;
+    }
+
+    void setUniformSpecTexture(Texture *uniformSpecTexture) {
+        this->uniformSpecTexture = uniformSpecTexture;
+    }
+
+    void setUniformLightVector(Vec3d const &uniformLightVector) {
+        this->uniformLightVector = uniformLightVector;
+    }
+
+    void setUniformShadowBuffer(Buffer *uniformShadowBuffer) {
+        this->uniformShadowBuffer = uniformShadowBuffer;
+    }
+
+    double getShadowCoefficient(Vec3d &v);
+
+    Vec3d getNormalVector(Vec2d &vt);
+
+    Vector<3, double> getLightVector();
+
+    Vector<3, double> getReflectVector(Vec3d &n, Vec3d &l);
+
+    qreal getSpecularCoefficient(Vec2d &vt, Vec3d &reflect);
+
+    double const &getDiffuseCoefficient(Vec3d &n, Vec3d &l);
+
+    double getAmbientCoefficient();
 };

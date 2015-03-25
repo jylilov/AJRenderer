@@ -79,71 +79,61 @@ QPixmap Renderer::render() {
     return ans;
 }
 
-struct Color {
-    uchar r, g, b;
-};
-
-void operator += (Color &c1, Color const &c2) {
-    c1.r += c2.r;
-    c1.g += c2.g;
-    c1.b += c2.b;
-}
-
 void Renderer::calcObjectShadow(ObjectModel *object) {
-    ShadowShader *shadowShader = new ShadowShader(
-            shadowMatrix * object->getModelMatrix()
-    );
+    ShadowShader *shadowShader = new ShadowShader();
+    shadowShader->setUniformShadowMatrix(shadowMatrix * object->getModelMatrix());
 
-    QVector<Vector<3, Vertex> > triangles = object->getTriangles();
-    for (QVector<Vector<3, Vertex> >::iterator i = triangles.begin(); i != triangles.end(); ++i) {
-        Vec4d v[3];
+    QVector< Vector<3, Vertex> > triangles = object->getTriangles();
 
-        for (size_t j = 0; j < 3; ++j) {
-            Vertex vertex = (*i)[j];
-            v[j] = shadowShader->vertexShader(vertex);
+    Vector<3, Vertex> triangle;
+    foreach(triangle, triangles) {
+        Vec4d vertexCoordinates[3];
+        for (uint i = 0; i < 3; ++i) {
+            Vertex vertex = triangle[i];
+            vertexCoordinates[i] = shadowShader->vertexShader(vertex, i);
         }
-
-        drawTriangle(v, shadowShader, image, shadowBuffer);
-        shadowShader->nextTriangle();
+        drawTriangle(vertexCoordinates, shadowShader, image, shadowBuffer);
     }
 
     delete shadowShader;
 }
 
 void Renderer::drawObject(ObjectModel *object) {
-    Shader *shader = new Shader(
-            viewport,
-            projection,
-            view,
-            object->getModelMatrix(),
-            shadowMatrix,
-            shadowBuffer,
-            lightVector,
-            object->getDiffuseTexture(),
-            object->getNmTexture(),
-            object->getSpecTexture()
-    );
+    Shader *shader = new Shader();
+
+    shader->setUniformViewport(viewport);
+    shader->setUniformProjection(projection);
+    shader->setUniformView(view);
+    shader->setUniformModel(object->getModelMatrix());
+    shader->setUniformShadow(shadowMatrix);
+    shader->setUniformShadowBuffer(shadowBuffer);
+    shader->setUniformLightVector(lightVector);
+    shader->setUniformDiffTexture(object->getDiffuseTexture());
+    shader->setUniformNmTexture(object->getNmTexture());
+    shader->setUniformSpecTexture(object->getSpecTexture());
+    shader->update();
+
 
     QVector<Vector<3, Vertex> > triangles = object->getTriangles();
-    for (QVector<Vector<3, Vertex> >::iterator i = triangles.begin(); i != triangles.end(); ++i) {
-        Vec4d v[3];
+    Vector<3, Vertex> triangle;
+    foreach(triangle, triangles) {
+        Vec4d vertexCoordinates[3];
 
-        for (size_t j = 0; j < 3; ++j) {
-            Vertex vertex = (*i)[j];
-            v[j] = shader->vertexShader(vertex);
+        for (uint i = 0; i < 3; ++i) {
+            Vertex vertex = triangle[i];
+            vertexCoordinates[i] = shader->vertexShader(vertex, i);
         }
 
-        drawTriangle(v, shader, image, zBuffer);
-        shader->nextTriangle();
+        drawTriangle(vertexCoordinates, shader, image, zBuffer);
     }
 
     delete shader;
 }
 
-void Renderer::drawTriangle(Vec4d t[3], IShader *shader, QImage *frame, Buffer *zBuffer) {
-    Vec3d tt[3];
+void Renderer::drawTriangle(Vec4d triangle[3], AbstractShader *shader, QImage *frame, Buffer *zBuffer) {
+    Vec3d vertexCoordinates[3];
     for (uint i = 0; i < 3; ++i) {
-        tt[i] = t[i].getProjection();
+        vertexCoordinates[i] = triangle[i].getProjection();
     }
 
     int minX = std::numeric_limits<int>::max();
@@ -152,10 +142,10 @@ void Renderer::drawTriangle(Vec4d t[3], IShader *shader, QImage *frame, Buffer *
     int maxY = -std::numeric_limits<int>::max();
 
     for (int i = 0; i < 3; ++i) {
-        minX = qMin(minX, qFloor(tt[i][0]));
-        maxX = qMax(maxX, qCeil(tt[i][0]));
-        minY = qMin(minY, qFloor(tt[i][1]));
-        maxY = qMax(maxY, qCeil(tt[i][1]));
+        minX = qMin(minX, qFloor(vertexCoordinates[i][0]));
+        maxX = qMax(maxX, qCeil(vertexCoordinates[i][0]));
+        minY = qMin(minY, qFloor(vertexCoordinates[i][1]));
+        maxY = qMax(maxY, qCeil(vertexCoordinates[i][1]));
     }
 
     minX = qMax(minX, 0);
@@ -163,23 +153,23 @@ void Renderer::drawTriangle(Vec4d t[3], IShader *shader, QImage *frame, Buffer *
     minY = qMax(minY, 0);
     maxY = qMin(maxY, frame->height());
 
-    Vec3d barycentric;
-    Vec3d bc_clip;
+    Vec3d bcScene;
+    Vec3d bcModel;
 
     double z;
 
     for (int i = minX; i <= maxX; ++i) {
         for (int j = minY; j < maxY; ++j) {
-            barycentric = getBarycentricCoordinate(tt, Vec3i(i, j, 1));
-            bc_clip = Vec3d(barycentric[0]/t[0][3], barycentric[1]/t[1][3], barycentric[2]/t[2][3]);
+            bcScene = getBarycentricCoordinate(vertexCoordinates, Vec3i(i, j, 1));
+            bcModel = Vec3d(bcScene[0]/ triangle[0][3], bcScene[1]/ triangle[1][3], bcScene[2]/ triangle[2][3]);
 
-            bc_clip = bc_clip / (bc_clip[0] + bc_clip[1] + bc_clip[2]);
+            bcModel = bcModel / (bcModel[0] + bcModel[1] + bcModel[2]);
 
-            if (barycentric[0] > 0 && barycentric[1] > 0 & barycentric[2] > 0) {
-                z = Vec3d(tt[0][2], tt[1][2], tt[2][2]) * barycentric;
+            if (bcScene[0] > 0 && bcScene[1] > 0 & bcScene[2] > 0) {
+                z = Vec3d(vertexCoordinates[0][2], vertexCoordinates[1][2], vertexCoordinates[2][2]) * bcScene;
                 if (z > zBuffer->get(i, j)[0]) {
                     VecColor color;
-                    if (!shader->fragmentShader(bc_clip, color)) {
+                    if (!shader->fragmentShader(bcModel, color)) {
                         zBuffer->set(i, j, static_cast<uchar>(z));
                         drawPixel(i, j, color, frame);
                     }
@@ -193,7 +183,7 @@ void Renderer::drawPixel(int const &x, int const &y, const VecColor &color, QIma
     frame->setPixel(x, y, qRgb(color[0], color[1], color[2]));
 }
 
-Vec3d Renderer::getBarycentricCoordinate(Vec3d coordinates[3], Vec3i point) {
+Vec3d Renderer::getBarycentricCoordinate(Vec3d const coordinates[3], Vec3i const &point) {
     Mat3d matrix;
     for (int i = 0; i < 3; ++i) {
         matrix[0][i] = coordinates[i][0];

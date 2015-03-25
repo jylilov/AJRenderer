@@ -4,7 +4,6 @@ Vertex::Vertex(const Vertex &vertex)
         : coordinates(vertex.coordinates),
           textureCoordinates(vertex.textureCoordinates),
           normalVector(vertex.normalVector)
-
 {
 }
 

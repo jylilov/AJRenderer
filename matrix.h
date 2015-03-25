@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QtCore>
+#include <strings.h>
 #include "vector.h"
 
 template <uint rowCount, uint colCount, typename T>
@@ -56,6 +57,20 @@ public:
             }
         }
         va_end(list);
+    }
+
+    Vector<rowCount, T> getColumn(uint index) const {
+        Vector<rowCount, T> vector;
+        for (uint i = 0; i < rowCount; ++i) {
+            vector[i] = items[i][index];
+        }
+        return vector;
+    }
+
+    void setColumn(uint index, Vector<rowCount, T> vector) {
+        for (uint i = 0; i < rowCount; ++i) {
+            items[i][index] = vector[i];
+        }
     }
 
     Matrix<colCount, rowCount, T> getTransposeMatrix() const {
