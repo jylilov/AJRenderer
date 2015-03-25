@@ -1,4 +1,3 @@
-#include <QtCore/qglobal.h>
 #include "shader.h"
 
 Vec4d Shader::vertexShader(Vertex vertex, uint nVertex) {
