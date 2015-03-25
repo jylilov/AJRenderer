@@ -1,5 +1,4 @@
-#ifndef MAINWINDOW_H
-#define MAINWINDOW_H
+#pragma once
 
 #include <QtWidgets>
 #include "renderer.h"
@@ -29,5 +28,3 @@ private slots:
 
     void showTime(int time);
 };
-
-#endif //MAINWINDOW_H

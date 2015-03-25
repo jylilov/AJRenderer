@@ -1,5 +1,59 @@
 #include "objectmodel.h"
 
+void ObjectModel::addTriangles(ObjectModel *object, QList< Vector<3, Vec3i> > &triangles) {
+    Vector<3, Vec3i> triangle;
+            foreach (triangle, triangles) {
+            Vector<3, Vertex> newTriangle;
+            for (uint i = 0; i < 3; ++i) {
+                Vertex vertex;
+                vertex.setCoordinates(object->vertexList[triangle[i][0]]);
+                vertex.setTextureCoordinates(object->textureVertexList[triangle[i][1]]);
+                vertex.setNormalVector(object->normalVectors[triangle[i][2]]);
+                newTriangle[i] = vertex;
+            }
+            object->triangles.push_back(newTriangle);
+        }
+}
+
+Vector<3, Vec3i> ObjectModel::parseTriangle(QList<QString>::const_iterator &iterator) {
+    Vector<3, Vec3i> triangle;
+    for (uint i = 0; i < 3; ++i) {
+        ++iterator;
+        Vec3i vertex;
+        QStringList array = iterator->split('/');
+
+        QStringList::const_iterator j = array.constBegin();
+
+        for (uint k = 0; k < 3; ++k) {
+            vertex[k] = (j++)->toInt() - 1;
+        }
+
+        triangle[i] = vertex;
+
+    }
+    return triangle;
+}
+
+Vec2d ObjectModel::parseTextureVector(QList<QString>::const_iterator &iterator) {
+    Vec2d vector;
+    for (int i = 0; i < 2; ++i) {
+        ++iterator;
+        vector[i] = iterator->toDouble();
+    }
+    vector[1] = 1 - vector[1];
+    return vector;
+}
+
+Vec3d ObjectModel::parseVector(QList<QString>::const_iterator &iterator) {
+    Vec3d vector;
+    for (int i = 0; i < 3; ++i) {
+        ++iterator;
+        vector[i] = iterator->toDouble();
+    }
+    vector[1] *= -1;
+    return vector;
+}
+
 ObjectModel *ObjectModel::fromWareFrontObjectFile(QString file_path) {
     ObjectModel *object = new ObjectModel();
     QFile file(file_path);
@@ -7,61 +61,34 @@ ObjectModel *ObjectModel::fromWareFrontObjectFile(QString file_path) {
     if (!file.open(QIODevice::ReadOnly))
         return 0;
 
+    QList< Vector<3, Vec3i> > triangles;
+
     while (!file.atEnd()) {
-        QByteArray line = file.readLine();
+        QString line(file.readLine());
 
-        line.remove(line.size() - 1, 1); // remove "/n"
+        line.remove('\n');
+        QStringList words = line.split(QRegExp("[ ]+"));
 
-        QList<QByteArray> words = line.split(' ');
-        QList<QByteArray>::iterator iterator = words.begin();
-        QString mode(*iterator);
+        QStringList::const_iterator iterator = words.constBegin();
+        QString mode = *iterator;
 
         if (mode == "v") {
-            Vec3d vector;
-            for (int i = 0; i < 3; ++i) {
-                ++iterator;
-                vector[i] = iterator->toDouble();
-            }
-            vector[1] *= -1;
+            Vec3d vector = parseVector(iterator);
             object->vertexList.push_back(vector);
         } else if (mode == "vt") {
-            Vec2d vector;
-            for (int i = 0; i < 2; ++i) {
-                ++iterator;
-
-                vector[i] = iterator->toDouble();
-            }
-            vector[1] = 1 - vector[1];
+            Vec2d vector = parseTextureVector(iterator);
             object->textureVertexList.push_back(vector);
         } else if (mode == "vn") {
-            Vec3d vector;
-            for (int i = 0; i < 3; ++i) {
-                ++iterator;
-
-                vector[i] = iterator->toDouble();
-            }
-            vector[1] *= -1;
+            Vec3d vector = parseVector(iterator);
             object->normalVectors.push_back(vector);
         } else if (mode == "f") {
-            Vector<3, Vertex> t;
-            for (size_t i = 0; i < 3; ++i) {
-                ++iterator;
-                Vertex vertex;
-                QList<QByteArray> array = iterator->split('/');
-
-                QList<QByteArray>::iterator j = array.begin();
-
-                vertex.setCoordinates(object->vertexList.at((j++)->toInt() - 1));
-                vertex.setTextureCoordinates(object->textureVertexList.at((j++)->toInt() - 1));
-                vertex.setNormalVector(object->normalVectors.at(j->toInt() - 1));
-
-                t[i] = vertex;
-            }
-            object->triangles.push_back(t);
+            Vector<3, Vec3i> triangle = parseTriangle(iterator);
+            triangles.push_back(triangle);
         }
     }
 
     file.close();
+    addTriangles(object, triangles);
 
     return object;
 }

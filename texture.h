@@ -40,6 +40,20 @@ private:
 public:
     ~Image() { delete [] data; }
 
+    void save(QString const &path) {
+        QImage img(width, height, QImage::Format_RGB888);
+        for (int i = 0; i < width; ++i) {
+            for (int j = 0; j < height; ++j) {
+                img.setPixel(i, j, qRgb(
+                   data[(i + j * height) * componentCount],
+                   data[(i + j * height) * componentCount + 1],
+                   data[(i + j * height) * componentCount + 2]
+                ));
+            }
+        }
+        img.save(path);
+    }
+
     void fill(uchar channel) {
         memset(data, channel, dataSize);
     }

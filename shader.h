@@ -56,7 +56,7 @@ private:
     uint currentVertex;
 
     Vec2d textureCoordinate;
-    Vec3d vertexCoourdinate;
+    Vec3d vertexCoordinate;
 
     Shader() {}
 public:

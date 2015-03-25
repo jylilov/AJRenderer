@@ -14,13 +14,13 @@ Vec4d Shader::vertexShader(Vertex vertex) {
 bool Shader::fragmentShader(Vec3d barycentricCoordinates, VecColor &resultColor) {
     interpolate(barycentricCoordinates);
 
-    Vec3d sb_p = (shadow * vertexCoourdinate.getExtension()).getProjection();
+    Vec3d sb_p = (shadow * vertexCoordinate.getExtension()).getProjection();
 
     int x = qRound(sb_p[0]);
     int y = qRound(sb_p[1]);
 
     double shadow;
-    if (shadowBuffer->get(x, y)[0] > static_cast<uchar>(sb_p[2])) {
+    if (shadowBuffer->get(x, y)[0] > static_cast<uchar>(sb_p[2]) + 20) {
         shadow = 0.6;
     } else {
         shadow = 1;
@@ -37,6 +37,8 @@ bool Shader::fragmentShader(Vec3d barycentricCoordinates, VecColor &resultColor)
     double diff = qMax(0.0, n * l);
 
     Vec3d color = Vec3d::cast(diffTexture->get(textureCoordinate));
+//    qDebug() << textureCoordinate[0] << textureCoordinate[1];
+//    qDebug() << color[0] << color[1] << color[2];
 //    Vec3d color = Vec3d(255.0, 255.0, 255.0);
 
     double k = (0.2 + diff + 0.4 * spec);
@@ -45,6 +47,7 @@ bool Shader::fragmentShader(Vec3d barycentricCoordinates, VecColor &resultColor)
 //    double k = 1;
 
     color *= shadow * k;
+//    color *= k;
 
     resultColor = VecColor::cast(Vec3i::cast(color));
     return false;
@@ -60,7 +63,7 @@ void Shader::interpolate(Vec3d barycentricCoordinates) {
     }
 
     textureCoordinate = textureCoordinateMatrix.getTransposeMatrix() * barycentricCoordinates;
-    vertexCoourdinate = vertexCoordinateMatrix.getTransposeMatrix() * barycentricCoordinates;
+    vertexCoordinate = vertexCoordinateMatrix.getTransposeMatrix() * barycentricCoordinates;
 }
 
 bool Shader::nextTriangle() {
