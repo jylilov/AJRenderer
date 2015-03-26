@@ -30,6 +30,6 @@ set(HEADERS
     vertex.h
     shader.h)
 
-add_executable(AJRenderer ${SOURCES} ${HEADERS})
+add_executable(AJRenderer ${SOURCES} ${HEADERS} vectorview.cpp vectorview.h)
 
 target_link_libraries(AJRenderer ${Qt5Widgets_LIBRARIES})

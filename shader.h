@@ -55,6 +55,7 @@ private:
 
     Matrix<3, 3, double> varyingVertexCoordinate;
     Matrix<2, 3, double> varyingTextureCoordinate;
+    Matrix<3, 3, double> varyingNormalVector;
 
 public:
     Shader() {}
@@ -107,7 +108,7 @@ public:
 
     double getShadowCoefficient(Vec3d &v);
 
-    Vec3d getNormalVector(Vec2d &vt);
+    Vec3d getNormalVector(Vec2d const &vt, Vec3d const &bc);
 
     Vector<3, double> getLightVector();
 
@@ -118,4 +119,6 @@ public:
     double const &getDiffuseCoefficient(Vec3d &n, Vec3d &l);
 
     double getAmbientCoefficient();
+
+    Vector<3, double> getColor(Vec2d &vt);
 };

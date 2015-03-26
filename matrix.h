@@ -38,6 +38,14 @@ public:
         for (uint i = 0; i < rowCount; ++i) m[i][i] *= scale;
         return m;
     }
+    template <uint dimCount>
+    static Matrix getScaleMatrix(Vector<dimCount, double> vector) {
+        Matrix m = getIdentityMatrix();
+        for (uint i = 0; i < qMin(rowCount, dimCount); ++i) {
+            m[i][i] *= vector[i];
+        }
+        return m;
+    }
 private:
     Vector<colCount, T> items[rowCount];
 public:

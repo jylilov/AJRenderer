@@ -61,6 +61,10 @@ ObjectModel *ObjectModel::fromWareFrontObjectFile(QString file_path) {
     if (!file.open(QIODevice::ReadOnly))
         return 0;
 
+    object->setName(getFileName(file));
+
+    loadTextures(object, file);
+
     QList< Vector<3, Vec3i> > triangles;
 
     while (!file.atEnd()) {
@@ -93,6 +97,20 @@ ObjectModel *ObjectModel::fromWareFrontObjectFile(QString file_path) {
     return object;
 }
 
+void ObjectModel::loadTextures(ObjectModel *object, QFile &file) {
+    QString path = file.fileName();
+    path.remove(".obj");
+    object->diffuseTexture = Texture::fromFile(path + "_diffuse.png");
+    object->nmTexture = Texture::fromFile(path + "_nm.png");
+    object->specTexture = Texture::fromFile(path + "_spec.png");
+}
+
+QString ObjectModel::getFileName(QFile const &file) {
+    QRegExp regExp("\\w+\\.obj");
+    regExp.indexIn(file.fileName());
+    return regExp.cap(0);
+}
+
 void ObjectModel::updateMatrix() {
     Mat4d turnX(
             1.0, 0.0, 0.0, 0.0,
@@ -115,5 +133,10 @@ void ObjectModel::updateMatrix() {
             0.0, 0.0, 0.0, 1.0
     );
 
-    modelMatrix = Mat4d::getScaleMatrix(size) * turnX * turnY * turnZ;
+    Mat4d positionMatrix = Mat4d::getIdentityMatrix();
+    for (uint i = 0; i < 3; ++i) {
+        positionMatrix[i][3] = position[i];
+    }
+
+    modelMatrix = Mat4d::getScaleMatrix(size) * turnX * turnY * turnZ * positionMatrix;
 }

@@ -39,6 +39,42 @@ public:
     QPixmap render();
     void addObject(ObjectModel *object) { objects.append(object); }
     void removeObject(ObjectModel *object) { objects.removeOne(object); }
+    void removeObject(int index) { objects.removeOne(objects[index]); }
+    ObjectModel *getObject(int index) { return objects[index]; }
+
+
+    Vec3d getLightVector() const {
+        return lightVector;
+    }
+
+    void setLightVector(Vec3d const &lightVector) {
+        Renderer::lightVector = lightVector.getNormalVector();
+    }
+
+    Vec3d getEye() const {
+        return eye;
+    }
+
+    void setEye(Vec3d const &eye) {
+        Renderer::eye = eye;
+    }
+
+    Vec3d getCenter() const {
+        return center;
+    }
+
+    void setCenter(Vec3d const &center) {
+        Renderer::center = center;
+    }
+
+    Vec3d getUp() const {
+        return up;
+    }
+
+    void setUp(Vec3d const &up) {
+        Renderer::up = up.getNormalVector();
+    }
+
 private:
     void drawObject(ObjectModel *object);
     void calcObjectShadow(ObjectModel *object);

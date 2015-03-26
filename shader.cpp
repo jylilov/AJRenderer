@@ -7,6 +7,7 @@ Vec4d Shader::vertexShader(Vertex vertex, uint nVertex) {
 
     varyingVertexCoordinate.setColumn(nVertex, vertex.getCoordinates());
     varyingTextureCoordinate.setColumn(nVertex, vertex.getTextureCoordinates());
+    varyingNormalVector.setColumn(nVertex, vertex.getNormalVector());
 
     return coordinates;
 }
@@ -18,7 +19,7 @@ bool Shader::fragmentShader(Vec3d barycentricCoordinates, VecColor &resultColor)
 
     double shadow = getShadowCoefficient(v);
 
-    Vec3d n = getNormalVector(vt);
+    Vec3d n = getNormalVector(vt, barycentricCoordinates);
     Vec3d l = getLightVector();
     Vec3d reflect = getReflectVector(n, l);
 
@@ -26,19 +27,25 @@ bool Shader::fragmentShader(Vec3d barycentricCoordinates, VecColor &resultColor)
     double spec = getSpecularCoefficient(vt, reflect);
     double diff = getDiffuseCoefficient(n, l);
 
-    Vec3d color = Vec3d::cast(uniformDiffTexture->get(vt));
-//    Vec3d color = Vec3d(255.0, 255.0, 255.0);
+    Vec3d color = getColor(vt);
 
     double k = (ambient + diff + 0.4 * spec);
-//    double k = spec;
-//    double k = diff;
-//    double k = 1;
+    if (k > 1) k = 1;
 
     color *= shadow * k;
-//    color *= k;
 
     resultColor = VecColor::cast(Vec3i::cast(color));
     return false;
+}
+
+Vec3d Shader::getColor(Vec2d &vt) {
+    Vec3d color;
+    if (uniformDiffTexture == 0) {
+        color = Vec3d(255.0, 255.0, 255.0);
+    } else {
+        color = Vec3d::cast(uniformDiffTexture->get(vt));
+    }
+    return color;
 }
 
 double Shader::getAmbientCoefficient() {
@@ -50,7 +57,14 @@ double const &Shader::getDiffuseCoefficient(Vec3d &n, Vec3d &l) {
 }
 
 qreal Shader::getSpecularCoefficient(Vec2d &vt, Vec3d &reflect) {
-    return qPow(qMax(reflect[2], 0.0), uniformSpecTexture->get(vt)[0]);
+    int power;
+    if (uniformSpecTexture == 0) {
+        power = 1;
+    } else {
+        power = uniformSpecTexture->get(vt)[0];
+        if (power == 0) power = 1;
+    }
+    return qPow(qMax(reflect[2], 0.0), power);
 }
 
 Vector<3, double> Shader::getReflectVector(Vec3d &n, Vec3d &l) {
@@ -61,9 +75,14 @@ Vector<3, double> Shader::getLightVector() {
     return (lightMatrix * uniformLightVector.getExtension(0.0)).getProjection().getNormalVector();
 }
 
-Vec3d Shader::getNormalVector(Vec2d &vt) {
-    Vec3d nm = Vec3d::cast(uniformNmTexture->get(vt)) - Vec3d(128.0, 128.0, 128.0);
-    Vec3d n = (normalMatrix * nm.getExtension(0.0)).getProjection().getNormalVector();
+Vec3d Shader::getNormalVector(Vec2d const &vt, Vec3d const &bc) {
+    Vec3d n;
+    if (uniformNmTexture == 0) {
+        n = varyingNormalVector * bc;
+    } else {
+        Vec3d nm = Vec3d::cast(uniformNmTexture->get(vt)) - Vec3d(128.0, 128.0, 128.0);
+        n = (normalMatrix * nm.getExtension(0.0)).getProjection().getNormalVector();
+    }
     return n;
 }
 
