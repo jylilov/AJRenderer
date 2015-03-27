@@ -1,5 +1,21 @@
 #include "objectmodel.h"
 
+QString ObjectModel::getFileName(QFile const &file) {
+    QRegExp regExp("\\w+\\.obj");
+    regExp.indexIn(file.fileName());
+    return regExp.cap(0);
+}
+
+Vec3d ObjectModel::parseVector(QList<QString>::const_iterator &iterator) {
+    Vec3d vector;
+    for (int i = 0; i < 3; ++i) {
+        ++iterator;
+        vector[i] = iterator->toDouble();
+    }
+    vector[1] *= -1;
+    return vector;
+}
+
 void ObjectModel::addTriangles(ObjectModel *object, QList< Vector<3, Vec3i> > &triangles) {
     Vector<3, Vec3i> triangle;
             foreach (triangle, triangles) {
@@ -41,16 +57,6 @@ Vec2d ObjectModel::parseTextureVector(QList<QString>::const_iterator &iterator) 
         vector[i] = iterator->toDouble();
     }
     vector[1] = 1 - vector[1];
-    return vector;
-}
-
-Vec3d ObjectModel::parseVector(QList<QString>::const_iterator &iterator) {
-    Vec3d vector;
-    for (int i = 0; i < 3; ++i) {
-        ++iterator;
-        vector[i] = iterator->toDouble();
-    }
-    vector[1] *= -1;
     return vector;
 }
 
@@ -105,10 +111,10 @@ void ObjectModel::loadTextures(ObjectModel *object, QFile &file) {
     object->specTexture = Texture::fromFile(path + "_spec.png");
 }
 
-QString ObjectModel::getFileName(QFile const &file) {
-    QRegExp regExp("\\w+\\.obj");
-    regExp.indexIn(file.fileName());
-    return regExp.cap(0);
+ObjectModel::~ObjectModel() {
+    if (diffuseTexture != 0) delete diffuseTexture;
+    if (nmTexture != 0) delete nmTexture;
+    if (specTexture != 0) delete specTexture;
 }
 
 void ObjectModel::updateMatrix() {

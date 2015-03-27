@@ -14,7 +14,7 @@ public:
     static Vec3d getBarycentricCoordinate(Vec3d const coordinates[3], Vec3i const &point);
     static void drawTriangle(Vec4d triangle[3], AbstractShader *shader, QImage *frame, Buffer *zBuffer);
     static void drawPixel(int const &x, int const &y, VecColor const &color, QImage *frame);
-protected:
+private:
     uint width;
     uint height;
 
@@ -36,7 +36,9 @@ protected:
 public:
     Renderer(uint width, uint height);
     ~Renderer() {}
+
     QPixmap render();
+
     void addObject(ObjectModel *object) { objects.append(object); }
     void removeObject(int index) { objects.removeOne(objects[index]); }
     ObjectModel *getObject(int index) { return objects[index]; }
@@ -49,7 +51,6 @@ public:
     void setCenterVector(Vec3d const &centerVector) { Renderer::centerVector = centerVector; }
     Vec3d getUpVector() const { return upVector; }
     void setUpVector(Vec3d const &upVector) { Renderer::upVector = upVector.getNormalVector();  }
-
 private:
     void drawObject(ObjectModel *object);
     void calcObjectShadow(ObjectModel *object);

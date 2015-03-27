@@ -17,64 +17,6 @@ private:
     static void loadTextures(ObjectModel *object, QFile &file);
 public:
     static ObjectModel *fromWareFrontObjectFile(QString file_path);
-
-private:
-    ObjectModel() : size(1.0, 1.0, 1.0), direction() { updateMatrix(); }
-
-    ~ObjectModel() {
-        if (diffuseTexture != 0) delete diffuseTexture;
-        if (nmTexture != 0) delete nmTexture;
-        if (specTexture != 0) delete specTexture;
-    }
-
-    void updateMatrix();
-
-public:
-    Texture *getDiffuseTexture() const { return diffuseTexture; }
-    Texture *getNmTexture() const { return nmTexture; }
-    Texture *getSpecTexture() const { return specTexture; }
-
-
-    Vec3d getSize() const {
-        return size;
-    }
-
-    void setSize(Vec3d const &size) {
-        ObjectModel::size = size;
-        updateMatrix();
-    }
-
-    Vec3d getDirection() const {
-        return direction;
-    }
-
-    void setDirection(Vec3d const &direction) {
-        ObjectModel::direction = direction;
-        updateMatrix();
-    }
-
-    Vec3d getPosition() const {
-        return position;
-    }
-
-    void setPosition(Vec3d const &position) {
-        ObjectModel::position = position;
-        updateMatrix();
-    }
-
-
-    QString const &getName() const {
-        return name;
-    }
-
-    void setName(QString const &name) {
-        ObjectModel::name = name;
-    }
-
-    Mat4d getModelMatrix() const { return modelMatrix; }
-
-    QVector<Vector<3, Vertex> > const &getTriangles() const { return triangles; }
-
 private:
     QString name;
 
@@ -93,4 +35,24 @@ private:
     Texture *diffuseTexture;
     Texture *specTexture;
     Texture *nmTexture;
+public:
+    ~ObjectModel();
+    Texture *getDiffuseTexture() const { return diffuseTexture; }
+    Texture *getNmTexture() const { return nmTexture; }
+    Texture *getSpecTexture() const { return specTexture; }
+
+    Vec3d getSize() const { return size; }
+    void setSize(Vec3d const &size) { this->size = size; updateMatrix(); }
+    Vec3d getDirection() const { return direction; }
+    void setDirection(Vec3d const &direction) { this->direction = direction; updateMatrix(); }
+    Vec3d getPosition() const { return position; }
+    void setPosition(Vec3d const &position) { ObjectModel::position = position; updateMatrix();  }
+    QString getName() const { return name; }
+    void setName(QString const &name) { ObjectModel::name = name; }
+    Mat4d getModelMatrix() const { return modelMatrix; }
+    QVector<Vector<3, Vertex> > const &getTriangles() const { return triangles; }
+private:
+    ObjectModel() : size(1.0, 1.0, 1.0), direction() { updateMatrix(); }
+
+    void updateMatrix();
 };

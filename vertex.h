@@ -8,7 +8,6 @@ private:
     Vec2d textureCoordinates;
     Vec3d normalVector;
 public:
-
     Vertex() {}
     Vertex(const Vertex &vertex);
     Vertex(const Vec3d &coordinates, const Vec2d &textureCoordinates, const Vec3d &normalVector);

@@ -66,59 +66,23 @@ public:
 
     void update();
 
-    void setUniformViewport(Mat4d const &uniformViewport) {
-        this->uniformViewport = uniformViewport;
-    }
-
-    void setUniformProjection(Mat4d const &uniformProjection) {
-        this->uniformProjection = uniformProjection;
-    }
-
-    void setUniformView(Mat4d const &uniformView) {
-        this->uniformView = uniformView;
-    }
-
-    void setUniformModel(Mat4d const &uniformModel) {
-        this->uniformModel = uniformModel;
-    }
-
-    void setUniformShadow(Mat4d const &uniformShadow) {
-        this->uniformShadow = uniformShadow;
-    }
-
-    void setUniformDiffTexture(Texture *uniformDiffTexture) {
-        this->uniformDiffTexture = uniformDiffTexture;
-    }
-
-    void setUniformNmTexture(Texture *uniformNmTexture) {
-        this->uniformNmTexture = uniformNmTexture;
-    }
-
-    void setUniformSpecTexture(Texture *uniformSpecTexture) {
-        this->uniformSpecTexture = uniformSpecTexture;
-    }
-
-    void setUniformLightVector(Vec3d const &uniformLightVector) {
-        this->uniformLightVector = uniformLightVector;
-    }
-
-    void setUniformShadowBuffer(Buffer *uniformShadowBuffer) {
-        this->uniformShadowBuffer = uniformShadowBuffer;
-    }
-
-    double getShadowCoefficient(Vec3d &v);
-
+    void setUniformViewport(Mat4d const &uniformViewport) { this->uniformViewport = uniformViewport; }
+    void setUniformProjection(Mat4d const &uniformProjection) { this->uniformProjection = uniformProjection; }
+    void setUniformView(Mat4d const &uniformView) { this->uniformView = uniformView; }
+    void setUniformModel(Mat4d const &uniformModel) { this->uniformModel = uniformModel; }
+    void setUniformShadow(Mat4d const &uniformShadow) { this->uniformShadow = uniformShadow; }
+    void setUniformDiffTexture(Texture *uniformDiffTexture) { this->uniformDiffTexture = uniformDiffTexture; }
+    void setUniformNmTexture(Texture *uniformNmTexture) { this->uniformNmTexture = uniformNmTexture; }
+    void setUniformSpecTexture(Texture *uniformSpecTexture) { this->uniformSpecTexture = uniformSpecTexture; }
+    void setUniformLightVector(Vec3d const &uniformLightVector) { this->uniformLightVector = uniformLightVector; }
+    void setUniformShadowBuffer(Buffer *uniformShadowBuffer) {  this->uniformShadowBuffer = uniformShadowBuffer;  }
+private:
+    double getShadowCoefficient(Vec3d const &v);
     Vec3d getNormalVector(Vec2d const &vt, Vec3d const &bc);
-
     Vector<3, double> getLightVector();
-
-    Vector<3, double> getReflectVector(Vec3d &n, Vec3d &l);
-
-    qreal getSpecularCoefficient(Vec2d &vt, Vec3d &reflect);
-
-    double const &getDiffuseCoefficient(Vec3d &n, Vec3d &l);
-
+    Vector<3, double> getReflectVector(Vec3d const &n, Vec3d const &l);
+    double getSpecularCoefficient(Vec2d const &vt, Vec3d const &reflect);
+    double getDiffuseCoefficient(Vec3d const &n, Vec3d const &l);
     double getAmbientCoefficient();
-
-    Vector<3, double> getColor(Vec2d &vt);
+    Vector<3, double> getColor(Vec2d const &vt);
 };

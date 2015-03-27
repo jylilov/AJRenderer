@@ -38,7 +38,7 @@ bool Shader::fragmentShader(Vec3d barycentricCoordinates, VecColor &resultColor)
     return false;
 }
 
-Vec3d Shader::getColor(Vec2d &vt) {
+Vec3d Shader::getColor(Vec2d const &vt) {
     Vec3d color;
     if (uniformDiffTexture == 0) {
         color = Vec3d(255.0, 255.0, 255.0);
@@ -52,11 +52,11 @@ double Shader::getAmbientCoefficient() {
     return 0.2;
 }
 
-double const &Shader::getDiffuseCoefficient(Vec3d &n, Vec3d &l) {
+double Shader::getDiffuseCoefficient(Vec3d const &n, Vec3d const &l) {
     return qMax(0.0, n * l);
 }
 
-qreal Shader::getSpecularCoefficient(Vec2d &vt, Vec3d &reflect) {
+double Shader::getSpecularCoefficient(Vec2d const &vt, Vec3d const &reflect) {
     int power;
     if (uniformSpecTexture == 0) {
         power = 1;
@@ -67,7 +67,7 @@ qreal Shader::getSpecularCoefficient(Vec2d &vt, Vec3d &reflect) {
     return qPow(qMax(reflect[2], 0.0), power);
 }
 
-Vector<3, double> Shader::getReflectVector(Vec3d &n, Vec3d &l) {
+Vector<3, double> Shader::getReflectVector(Vec3d const &n, Vec3d const &l) {
     return (n * (n * l * 2.0) - l).getNormalVector();
 }
 
@@ -86,7 +86,7 @@ Vec3d Shader::getNormalVector(Vec2d const &vt, Vec3d const &bc) {
     return n;
 }
 
-double Shader::getShadowCoefficient(Vec3d &v) {
+double Shader::getShadowCoefficient(Vec3d const &v) {
     Vec3d vShadow = (shadowMatrix * v.getExtension()).getProjection();
 
     int x = qRound(vShadow[0]);

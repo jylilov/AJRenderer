@@ -10,29 +10,28 @@ class MainWindow : public QMainWindow
 private:
     static const uint RENDERER_WIDTH = 600;
     static const uint RENDERER_HEIGHT = 600;
+
+    QLabel *rendererOutputLabel;
+    QAction *refreshAction;
+
+    QAction *addObjectAction;
+    QListWidget *objectsListWidget;
+
+    VectorView *objectPositionView;
+
+    VectorView *objectSizeView;
+    VectorView *objectDirectionView;
+    QPushButton *changeObjectParametersButton;
+    VectorView *rendererLightVectorView;
+
+    VectorView *rendererUpVectorView;
+    VectorView *rendererCenterVectorView;
+    VectorView *rendererEyeVectorView;
+    Renderer *renderer;
 public:
     MainWindow();
     ~MainWindow() { delete renderer; }
 private:
-    QLabel *rendererOutputLabel;
-
-    QAction *refreshAction;
-    QAction *addObjectAction;
-
-    QListWidget *objectsListWidget;
-
-    VectorView *objectPositionView;
-    VectorView *objectSizeView;
-    VectorView *objectDirectionView;
-    QPushButton *changeObjectParametersButton;
-
-    VectorView *rendererLightVectorView;
-    VectorView *rendererUpVectorView;
-    VectorView *rendererCenterVectorView;
-    VectorView *rendererEyeVectorView;
-
-    Renderer *renderer;
-
     void initializeMenu();
     void initializeRendererView(QWidget *parent);
     void initializeRendererParametersView(QWidget *parent);
