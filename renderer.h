@@ -19,9 +19,9 @@ protected:
     uint height;
 
     Vec3d lightVector;
-    Vec3d eye;
-    Vec3d center;
-    Vec3d up;
+    Vec3d eyeVector;
+    Vec3d centerVector;
+    Vec3d upVector;
 
     Mat4d viewport;
     Mat4d projection;
@@ -38,42 +38,17 @@ public:
     ~Renderer() {}
     QPixmap render();
     void addObject(ObjectModel *object) { objects.append(object); }
-    void removeObject(ObjectModel *object) { objects.removeOne(object); }
     void removeObject(int index) { objects.removeOne(objects[index]); }
     ObjectModel *getObject(int index) { return objects[index]; }
 
-
-    Vec3d getLightVector() const {
-        return lightVector;
-    }
-
-    void setLightVector(Vec3d const &lightVector) {
-        Renderer::lightVector = lightVector.getNormalVector();
-    }
-
-    Vec3d getEye() const {
-        return eye;
-    }
-
-    void setEye(Vec3d const &eye) {
-        Renderer::eye = eye;
-    }
-
-    Vec3d getCenter() const {
-        return center;
-    }
-
-    void setCenter(Vec3d const &center) {
-        Renderer::center = center;
-    }
-
-    Vec3d getUp() const {
-        return up;
-    }
-
-    void setUp(Vec3d const &up) {
-        Renderer::up = up.getNormalVector();
-    }
+    Vec3d getLightVector() const { return lightVector; }
+    void setLightVector(Vec3d const &lightVector) { this->lightVector = lightVector.getNormalVector(); }
+    Vec3d getEyeVector() const { return eyeVector; }
+    void setEyeVector(Vec3d const &eyeVector) { this->eyeVector = eyeVector; }
+    Vec3d getCenterVector() const { return centerVector; }
+    void setCenterVector(Vec3d const &centerVector) { Renderer::centerVector = centerVector; }
+    Vec3d getUpVector() const { return upVector; }
+    void setUpVector(Vec3d const &upVector) { Renderer::upVector = upVector.getNormalVector();  }
 
 private:
     void drawObject(ObjectModel *object);

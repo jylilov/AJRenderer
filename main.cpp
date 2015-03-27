@@ -8,7 +8,5 @@ int main(int argc, char *argv[]) {
     MainWindow win;
     win.showMaximized();
 
-    int result = app.exec();
-
-    return result;
+    return app.exec();
 }

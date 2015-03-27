@@ -40,9 +40,9 @@ Renderer::Renderer(uint width, uint height)
 {
     // TODO move to constants
     lightVector = Vec3d(1.0, -1.0, 1.0).getNormalVector();
-    up = Vec3d(0.0, 1.0, 0.0).getNormalVector();
-    center = Vec3d(0.0, 0.0, 0.0);
-    eye = Vec3d(0.0, 0.0, 3.0);
+    upVector = Vec3d(0.0, 1.0, 0.0).getNormalVector();
+    centerVector = Vec3d(0.0, 0.0, 0.0);
+    eyeVector = Vec3d(0.0, 0.0, 3.0);
 }
 
 QPixmap Renderer::render() {
@@ -57,15 +57,15 @@ QPixmap Renderer::render() {
 
     viewport = getViewportMatrix(width, height);
     projection = getProjectionMatrix(0);
-    view = getViewMatrix(lightVector, center, up);
+    view = getViewMatrix(lightVector, centerVector, upVector);
 
     shadowMatrix = viewport * projection * view;
 
     for (QList<ObjectModel *>::const_iterator i = objects.constBegin(); i != objects.constEnd(); ++i)
         calcObjectShadow(*i);
 
-    projection = getProjectionMatrix(-1 / (eye - center).getLength());
-    view = getViewMatrix(eye, center, up);
+    projection = getProjectionMatrix(-1 / (eyeVector - centerVector).getLength());
+    view = getViewMatrix(eyeVector, centerVector, upVector);
 
     for (QList<ObjectModel *>::const_iterator i = objects.constBegin(); i != objects.constEnd(); ++i)
         drawObject(*i);

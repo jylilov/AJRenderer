@@ -4,75 +4,71 @@ MainWindow::MainWindow() {
     renderer = new Renderer(RENDERER_WIDTH, RENDERER_HEIGHT);
 
     QWidget *mainWidget = new QWidget(this);
-    setCentralWidget(mainWidget);
-
     QHBoxLayout *mainLayout = new QHBoxLayout(mainWidget);
 
-    QWidget *objectParametersView = initializeObjectParameters();
-    mainLayout->addWidget(objectParametersView);
+    setCentralWidget(mainWidget);
 
-    scrollArea = initializeWorkPane();
-    mainLayout->addWidget(scrollArea);
-
-    QWidget *parameters = initializeParametersView();
-    mainLayout->addWidget(parameters);
-
+    initializeObjectParametersView(mainWidget);
+    initializeRendererView(mainWidget);
+    initializeRendererParametersView(mainWidget);
     initializeMenu();
 }
 
-QWidget *MainWindow::initializeObjectParameters() {
-    QWidget *objectParametersView = new QWidget(this);
-    objectParametersView->setFixedWidth(150);
+void MainWindow::initializeObjectParametersView(QWidget *parent) {
+    QWidget *objectParametersView = new QWidget(parent);
+    objectParametersView->setFixedWidth(200);
 
     QVBoxLayout *objectParametersLayout = new QVBoxLayout(objectParametersView);
-    objectsList = new QListWidget(this);
 
-    objectParametersLayout->addWidget(objectsList);
+    objectsListWidget = new QListWidget(objectParametersView);
+    changeObjectParametersButton = new QPushButton("Change parameters", objectParametersView);
 
-    objectParametersLayout->addWidget(sizeView = new VectorView(this, "Size"));
-    objectParametersLayout->addWidget(positionView = new VectorView(this, "Position"));
-    objectParametersLayout->addWidget(directionView = new VectorView(this, "Turn angle"));
-
-    changeObjectParametersButton = new QPushButton("OK", this);
-
-    connect(changeObjectParametersButton, SIGNAL(clicked()), this, SLOT(changeObjectParameters()));
-    connect(objectsList, SIGNAL(currentRowChanged(int)), this, SLOT(changeCurrentObject()));
-    connect(objectsList, SIGNAL(itemActivated(QListWidgetItem *)), this, SLOT(removeCurrentObject()));
-
+    objectParametersLayout->addWidget(objectsListWidget);
+    objectParametersLayout->addWidget(objectSizeView = new VectorView(objectParametersView, "Size"));
+    objectParametersLayout->addWidget(objectPositionView = new VectorView(objectParametersView, "Position"));
+    objectParametersLayout->addWidget(objectDirectionView = new VectorView(objectParametersView, "Turn angle"));
     objectParametersLayout->addWidget(changeObjectParametersButton);
-    changeCurrentObject();
-    return objectParametersView;
+
+    connect(changeObjectParametersButton, SIGNAL(clicked()), this, SLOT(updateObjectParameters()));
+    connect(objectsListWidget, SIGNAL(currentRowChanged(int)), this, SLOT(updateCurrentObjectSelection()));
+    connect(objectsListWidget, SIGNAL(itemActivated(QListWidgetItem *)), this, SLOT(removeCurrentObject()));
+
+    updateCurrentObjectSelection();
+
+    parent->layout()->addWidget(objectParametersView);
 }
 
-QWidget *MainWindow::initializeParametersView() {
-    QWidget *parameters = new QWidget(this);
-    QVBoxLayout *parametersLayout = new QVBoxLayout(parameters);
+void MainWindow::initializeRendererParametersView(QWidget *parent) {
+    QWidget *parametersView = new QWidget(parent);
+    QVBoxLayout *parametersLayout = new QVBoxLayout(parametersView);
 
-    lightVectorView = new VectorView(parameters, "Light direction", -1.0, 1.0);
-    lightVectorView->setValue(renderer->getLightVector());
-    parametersLayout->addWidget(lightVectorView);
+    rendererLightVectorView = new VectorView(parametersView, "Light direction", -1.0, 1.0);
+    rendererLightVectorView->setValue(renderer->getLightVector());
+    parametersLayout->addWidget(rendererLightVectorView);
 
-    centerVectorView = new VectorView(parameters, "Center position");
-    centerVectorView->setValue(renderer->getCenter());
-    parametersLayout->addWidget(centerVectorView);
+    rendererCenterVectorView = new VectorView(parametersView, "Center position");
+    rendererCenterVectorView->setValue(renderer->getCenterVector());
+    parametersLayout->addWidget(rendererCenterVectorView);
 
-    upVectorView = new VectorView(parameters, "Up direction", -1.0, 1.0);
-    upVectorView->setValue(renderer->getUp());
-    parametersLayout->addWidget(upVectorView);
+    rendererUpVectorView = new VectorView(parametersView, "Up direction", -1.0, 1.0);
+    rendererUpVectorView->setValue(renderer->getUpVector());
+    parametersLayout->addWidget(rendererUpVectorView);
 
-    eyeVectorView = new VectorView(parameters, "Eye position");
-    eyeVectorView->setValue(renderer->getEye());
-    parametersLayout->addWidget(eyeVectorView);
+    rendererEyeVectorView = new VectorView(parametersView, "Eye position");
+    rendererEyeVectorView->setValue(renderer->getEyeVector());
+    parametersLayout->addWidget(rendererEyeVectorView);
 
-    return parameters;
+    parent->layout()->addWidget(parametersView);
 }
 
-QScrollArea *MainWindow::initializeWorkPane() {
-    QScrollArea *scrollArea = new QScrollArea(this);
-    imageLabel = new QLabel(scrollArea);
-    scrollArea->setWidget(imageLabel);
-    scrollArea->setAlignment(Qt::AlignCenter);
-    return scrollArea;
+void MainWindow::initializeRendererView(QWidget *parent) {
+    QScrollArea *rendererView = new QScrollArea(parent);
+    rendererOutputLabel = new QLabel(rendererView);
+
+    rendererView->setWidget(rendererOutputLabel);
+    rendererView->setAlignment(Qt::AlignCenter);
+
+    parent->layout()->addWidget(rendererView);
 }
 
 void MainWindow::initializeMenu() {
@@ -80,71 +76,85 @@ void MainWindow::initializeMenu() {
     refreshAction->setShortcut(tr("Ctrl+R"));
     connect(refreshAction, SIGNAL(triggered()), this, SLOT(refresh()));
 
-    QAction *addAction = new QAction("&Add", this);
-    addAction->setShortcut(tr("Ctrl+A"));
-    connect(addAction, SIGNAL(triggered()), this, SLOT(addNewObject()));
+    addObjectAction = new QAction("&Add", this);
+    addObjectAction->setShortcut(tr("Ctrl+A"));
+    connect(addObjectAction, SIGNAL(triggered()), this, SLOT(addNewObject()));
 
-    actionMenu = new QMenu(tr("&Actions"), this);
+    QMenu *actionMenu = new QMenu(tr("&Actions"), this);
     actionMenu->addAction(refreshAction);
-    actionMenu->addAction(addAction);
+    actionMenu->addAction(addObjectAction);
 
     menuBar()->addMenu(actionMenu);
 }
 
-void MainWindow::refresh() {
-    if (!renderer) return;
-    QTime startTime = QTime::currentTime();
-    renderer->setCenter(centerVectorView->getValue());
-    renderer->setUp(upVectorView->getValue());
-    renderer->setEye(eyeVectorView->getValue());
-    renderer->setLightVector(lightVectorView->getValue());
-    QPixmap renderedPixmap = renderer->render();
-    imageLabel->setPixmap(renderedPixmap);
-    imageLabel->resize(imageLabel->pixmap()->size());
-    showTime(startTime.elapsed());
+void MainWindow::updateRendererParameters() {
+    renderer->setCenterVector(rendererCenterVectorView->getValue());
+    renderer->setUpVector(rendererUpVectorView->getValue());
+    renderer->setEyeVector(rendererEyeVectorView->getValue());
+    renderer->setLightVector(rendererLightVectorView->getValue());
 }
 
-void MainWindow::showTime(int time) {
+void MainWindow::updateObjectParametersView(ObjectModel *object) {
+    objectSizeView->setValue(object->getSize());
+    objectPositionView->setValue(object->getPosition());
+    objectDirectionView->setValue(object->getDirection());
+}
+
+
+void MainWindow::updateObjectParameters(ObjectModel *object) {
+    object->setSize(objectSizeView->getValue());
+    object->setPosition(objectPositionView->getValue());
+    object->setDirection(objectDirectionView->getValue());
+}
+
+void MainWindow::showRenderTime(int time) {
     QMessageBox messageBox(this);
     QString text;
     text.sprintf("%.2f sec", time / 1000.0);
     messageBox.setText(text);
+    messageBox.setWindowTitle("Render time");
     messageBox.exec();
 }
 
+void MainWindow::refresh() {
+    updateRendererParameters();
 
-void MainWindow::changeObjectParameters() {
-    int index = objectsList->currentIndex().row();
-    ObjectModel *object = renderer->getObject(index);
-    object->setSize(sizeView->getValue());
-    object->setPosition(positionView->getValue());
-    object->setDirection(directionView->getValue());
-}
+    QTime startTime = QTime::currentTime();
 
-void MainWindow::changeCurrentObject() {
-    int index = objectsList->currentIndex().row();
-    if (index == -1) {
-        changeObjectParametersButton->setEnabled(false);
-        return;
-    } else {
-        changeObjectParametersButton->setEnabled(true);
-    }
-    ObjectModel *object = renderer->getObject(index);
-    sizeView->setValue(object->getSize());
-    positionView->setValue(object->getPosition());
-    directionView->setValue(object->getDirection());
-}
+    QPixmap renderedPixmap = renderer->render();
+    rendererOutputLabel->setPixmap(renderedPixmap);
+    rendererOutputLabel->resize(rendererOutputLabel->pixmap()->size());
 
-void MainWindow::removeCurrentObject() {
-    int index = objectsList->currentIndex().row();
-    QListWidgetItem *item = objectsList->takeItem(index);
-    delete item;
-    renderer->removeObject(index);
+    showRenderTime(startTime.elapsed());
 }
 
 void MainWindow::addObject(ObjectModel *object) {
     renderer->addObject(object);
-    objectsList->addItem(object->getName());
+    objectsListWidget->addItem(object->getName());
+}
+
+void MainWindow::updateObjectParameters() {
+    int index = objectsListWidget->currentIndex().row();
+    ObjectModel *object = renderer->getObject(index);
+    updateObjectParameters(object);
+}
+
+void MainWindow::updateCurrentObjectSelection() {
+    int index = objectsListWidget->currentIndex().row();
+    if (index != -1) {
+        changeObjectParametersButton->setEnabled(true);
+        ObjectModel *object = renderer->getObject(index);
+        updateObjectParametersView(object);
+    } else {
+        changeObjectParametersButton->setEnabled(false);
+    }
+}
+
+void MainWindow::removeCurrentObject() {
+    int index = objectsListWidget->currentIndex().row();
+    QListWidgetItem *item = objectsListWidget->takeItem(index);
+    delete item;
+    renderer->removeObject(index);
 }
 
 void MainWindow::addNewObject() {

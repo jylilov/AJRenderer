@@ -12,40 +12,43 @@ private:
     static const uint RENDERER_HEIGHT = 600;
 public:
     MainWindow();
+    ~MainWindow() { delete renderer; }
 private:
-    QScrollArea *scrollArea;
-    QLabel *imageLabel;
+    QLabel *rendererOutputLabel;
 
     QAction *refreshAction;
+    QAction *addObjectAction;
 
-    QMenu *actionMenu;
+    QListWidget *objectsListWidget;
 
-    QListWidget *objectsList;
-
-    VectorView *positionView;
-    VectorView *sizeView;
-    VectorView *directionView;
+    VectorView *objectPositionView;
+    VectorView *objectSizeView;
+    VectorView *objectDirectionView;
     QPushButton *changeObjectParametersButton;
 
-    VectorView *lightVectorView;
-    VectorView *upVectorView;
-    VectorView *centerVectorView;
-    VectorView *eyeVectorView;
+    VectorView *rendererLightVectorView;
+    VectorView *rendererUpVectorView;
+    VectorView *rendererCenterVectorView;
+    VectorView *rendererEyeVectorView;
 
     Renderer *renderer;
 
-    void showTime(int time);
     void initializeMenu();
-    QScrollArea *initializeWorkPane();
-    QWidget *initializeParametersView();
-    QWidget *initializeObjectParameters();
-    void initializeRenderer();
+    void initializeRendererView(QWidget *parent);
+    void initializeRendererParametersView(QWidget *parent);
+    void initializeObjectParametersView(QWidget *parent);
+
+    void updateRendererParameters();
+    void updateObjectParameters(ObjectModel *object);
+    void updateObjectParametersView(ObjectModel *object);
+
+    void showRenderTime(int time);
+    void addObject(ObjectModel *object);
 private slots:
     void refresh();
-    void changeObjectParameters();
+    void updateObjectParameters();
     void removeCurrentObject();
-    void changeCurrentObject();
+    void updateCurrentObjectSelection();
+
     void addNewObject();
-public:
-    void addObject(ObjectModel *object);
 };
